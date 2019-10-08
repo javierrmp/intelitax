@@ -5,7 +5,7 @@
 -- Dumped from database version 11.5 (Ubuntu 11.5-1.pgdg19.04+1)
 -- Dumped by pg_dump version 11.5 (Ubuntu 11.5-1.pgdg19.04+1)
 
--- Started on 2019-10-03 11:07:37 CDT
+-- Started on 2019-10-08 09:33:25 CDT
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -100,7 +100,32 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
--- TOC entry 390 (class 1255 OID 45459)
+-- TOC entry 388 (class 1255 OID 47018)
+-- Name: CargaCfdiComprobante(character, character, character, timestamp without time zone, character, character, character, character, character, double precision, double precision, character, double precision, double precision, character, character, character, character, character, character, character, character, character, character, character, character, double precision, double precision, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE PROCEDURE "BaseSistema"."CargaCfdiComprobante"(versions character, serie character, folio character, fecha timestamp without time zone, sello character, formapago character, nocertificado character, certificado character, condicionesdepago character, subtotal double precision, descuento double precision, moneda character, tipocambio double precision, total double precision, tipodecomprobante character, metodopago character, lugarexpedicion character, confirmacion character, rfcemisor character, nombreemisor character, regimenfiscal character, rfcreceptor character, nombrereceptor character, residenciafisicareceptor character, numregidtribreceptor character, usocfdi character, totalimpuestosretenidos double precision, totalimpuestostrasladados double precision, cve_descarga character)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE IdComprobante int;
+begin
+
+	INSERT INTO "InfUsuario"."CFDICOMPROBANTE"(
+	"VERSION", "SERIE", "FOLIO", "FECHA", "SELLO", "FORMAPAGO", "NOCERTIFICADO", "CERTIFICADO", "CONDICIONESDEPAGO", "SUBTOTAL", "DESCUENTO", "MONEDA", "TIPOCAMBIO", "TOTAL", "TIPODECOMPROBANTE", "METODOPAGO", "LUGAREXPEDICION", "CONFIRMACION", "RFCEMISOR", "NOMBREEMISOR", "REGIMENFISCAL", "RFCRECEPTOR", "NOMBRERECEPTOR", "RESIDENCIAFISICARECEPTOR", "NUMREGIDTRIBRECEPTOR", "USOCFDI", "TOTALIMPUESTOSRETENIDOS", "TOTALIMPUESTOSTRASLADADOS", "CVE_DESCARGA")
+	VALUES (VERSIONS, SERIE, FOLIO, FECHA, SELLO, FORMAPAGO, NOCERTIFICADO, CERTIFICADO, CONDICIONESDEPAGO, SUBTOTAL, DESCUENTO, MONEDA, TIPOCAMBIO, TOTAL, TIPODECOMPROBANTE, METODOPAGO, LUGAREXPEDICION, CONFIRMACION, RFCEMISOR, NOMBREEMISOR, REGIMENFISCAL, RFCRECEPTOR, NOMBRERECEPTOR, RESIDENCIAFISICARECEPTOR, NUMREGIDTRIBRECEPTOR, USOCFDI, TOTALIMPUESTOSRETENIDOS, TOTALIMPUESTOSTRASLADADOS, CVE_DESCARGA);
+	
+	SELECT "ID_COMPROBANTE" INTO IdComprobante FROM "InfUsuario"."CFDICOMPROBANTE" WHERE "CVE_DESCARGA" = CVE_DESCARGA;
+	
+	RAISE NOTICE '%',IdComprobante;
+	
+end;
+$$;
+
+
+ALTER PROCEDURE "BaseSistema"."CargaCfdiComprobante"(versions character, serie character, folio character, fecha timestamp without time zone, sello character, formapago character, nocertificado character, certificado character, condicionesdepago character, subtotal double precision, descuento double precision, moneda character, tipocambio double precision, total double precision, tipodecomprobante character, metodopago character, lugarexpedicion character, confirmacion character, rfcemisor character, nombreemisor character, regimenfiscal character, rfcreceptor character, nombrereceptor character, residenciafisicareceptor character, numregidtribreceptor character, usocfdi character, totalimpuestosretenidos double precision, totalimpuestostrasladados double precision, cve_descarga character) OWNER TO postgres;
+
+--
+-- TOC entry 387 (class 1255 OID 45459)
 -- Name: CargaCredenciales(character, text, character, character, character, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -146,331 +171,6 @@ $$;
 
 
 ALTER PROCEDURE "BaseSistema"."CargaCredenciales"(idrfc character, paswd text, ruta character, nomllave character, nomcert character, estatus character) OWNER TO postgres;
-
---
--- TOC entry 349 (class 1255 OID 38281)
--- Name: CargaINFO69(character, character, character, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
---
-
-CREATE PROCEDURE "BaseSistema"."CargaINFO69"(cve_descarga character, file_name character, temporal character, ruta character)
-    LANGUAGE plpgsql
-    AS $$
---DECLARE ruta character(500);
-begin
-
---ruta := '/home/master/Documentos/Google Drive/Proyectos Personales/Grit/SUKARNE/Listado 69/' || FILE_NAME;
-ruta:= ruta || file_name;
-
-CREATE TEMP TABLE IF NOT EXISTS TemporalINFO69_1
-(
-    "RFC" character(13) COLLATE pg_catalog."default",
-    "RAZON_SOC" character(255) COLLATE pg_catalog."default",
-    "TPO_PERS" character(2) COLLATE pg_catalog."default",
-    "SUPUESTO" character(20) COLLATE pg_catalog."default",
-    "FH_PRIM_PUB" character(30) COLLATE pg_catalog."default",
-    "MNTO" character(30) COLLATE pg_catalog."default",
-    "FH_PUB" character(30) COLLATE pg_catalog."default",
-    "BCO1" character(15) COLLATE pg_catalog."default",
-    "BCO2" character(15) COLLATE pg_catalog."default"
-); 
-
-CREATE TEMP TABLE IF NOT EXISTS TemporalINFO69_2
-(
-    "RFC" character(13) COLLATE pg_catalog."default",
-    "RAZON_SOC" character(255) COLLATE pg_catalog."default",
-    "TPO_PERS" character(2) COLLATE pg_catalog."default",
-    "SUPUESTO" character(20) COLLATE pg_catalog."default",
-    "FH_PRIM_PUB" character(30) COLLATE pg_catalog."default",
-    "MNTO" character(30) COLLATE pg_catalog."default",
-    "FH_PUB" character(30) COLLATE pg_catalog."default"
-); 
-
-CREATE TEMP TABLE IF NOT EXISTS TemporalINFO69_3
-(
-    "RFC" character(13) COLLATE pg_catalog."default",
-    "RAZON_SOC" character(255) COLLATE pg_catalog."default",
-    "TPO_PERS" character(2) COLLATE pg_catalog."default",
-    "SUPUESTO" character(20) COLLATE pg_catalog."default",
-    "FH_PRIM_PUB" character(30) COLLATE pg_catalog."default",
-    "BCO1" character(15) COLLATE pg_catalog."default"
-); 
-
-CREATE TEMP TABLE IF NOT EXISTS TemporalINFO69_4
-(
-    "RFC" character(13) COLLATE pg_catalog."default",
-    "RAZON_SOC" character(255) COLLATE pg_catalog."default",
-    "TPO_PERS" character(2) COLLATE pg_catalog."default",
-    "SUPUESTO" character(20) COLLATE pg_catalog."default",
-    "FH_PRIM_PUB" character(30) COLLATE pg_catalog."default"
-); 
-
-CREATE TEMP TABLE IF NOT EXISTS TemporalINFO69_5
-(
-    "RFC" character(13) COLLATE pg_catalog."default",
-    "RAZON_SOC" character(255) COLLATE pg_catalog."default",
-    "TPO_PERS" character(2) COLLATE pg_catalog."default",
-    "SUPUESTO" character(20) COLLATE pg_catalog."default",
-    "FH_PRIM_PUB" character(30) COLLATE pg_catalog."default",
-    "BCO1" character(15) COLLATE pg_catalog."default",
-    "BCO2" character(15) COLLATE pg_catalog."default"
-); 
-
-IF TEMPORAL = 'TemporalINFO69_1' THEN
-	EXECUTE 'COPY TemporalINFO69_1 from ''' || ruta || ''' delimiter '','' csv header';
-
-	INSERT INTO "BaseSistemaHistorico"."INF69"(
-		"RFC", "RAZON_SOC", "TPO_PERS", 
-		"SUPUESTO", "FH_PRIM_PUB", "MNTO", "FH_PUB", "CVE_DESCARGA", "FH_HIST",
-		"AGRUPACION", "SELECCION")
-	SELECT "RFC", "RAZON_SOC", 
-		TRIM(BOTH FROM "TPO_PERS") AS TPO_PERS,
-		"SUPUESTO", 
-		to_date("FH_PRIM_PUB",'DD/MM/YYYY') AS "FH_PRIM_PUB", 
-		"MNTO", 
-		to_date("FH_PUB",'DD/MM/YYYY') as "FH_PUB",
-		CVE_DESCARGA AS "CVE_DESCARGA", 
-		NOW() AS "FH_HIST",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO'
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 'DELITO FISCAL'
-			ELSE "SUPUESTO"
-		END AS "AGRUPACION",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 1
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 2
-			WHEN "SUPUESTO" = 'FIRMES' THEN 3
-			WHEN "SUPUESTO" = 'EXIGIBLES' THEN 4
-			WHEN "SUPUESTO" = 'RETORNO INVERSIONES' THEN 5
-			WHEN "SUPUESTO" = 'CONDONADOS' THEN 6
-			WHEN "SUPUESTO" = 'CANCELADOS' THEN 7
-		END AS "SELECCION"
-	FROM TemporalINFO69_1;
-END IF;
-
-IF TEMPORAL = 'TemporalINFO69_2' THEN
-	EXECUTE 'COPY TemporalINFO69_2 from ''' || ruta || ''' delimiter '','' csv header';
-
-	INSERT INTO "BaseSistemaHistorico"."INF69"(
-		"RFC", "RAZON_SOC", "TPO_PERS", 
-		"SUPUESTO", "FH_PRIM_PUB", "MNTO", "FH_PUB", "CVE_DESCARGA", "FH_HIST",
-		"AGRUPACION", "SELECCION")
-	SELECT "RFC", "RAZON_SOC", 
-		TRIM(BOTH FROM "TPO_PERS") AS TPO_PERS,
-		"SUPUESTO", 
-		to_date("FH_PRIM_PUB",'DD/MM/YYYY') AS "FH_PRIM_PUB", 
-		"MNTO", 
-		to_date("FH_PUB",'DD/MM/YYYY') as "FH_PUB",
-		CVE_DESCARGA AS "CVE_DESCARGA", 
-		NOW() AS "FH_HIST",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO'
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 'DELITO FISCAL'
-			ELSE "SUPUESTO"
-		END AS "AGRUPACION",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 1
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 2
-			WHEN "SUPUESTO" = 'FIRMES' THEN 3
-			WHEN "SUPUESTO" = 'EXIGIBLES' THEN 4
-			WHEN "SUPUESTO" = 'RETORNO INVERSIONES' THEN 5
-			WHEN "SUPUESTO" = 'CONDONADOS' THEN 6
-			WHEN "SUPUESTO" = 'CANCELADOS' THEN 7
-		END AS "SELECCION"
-	FROM TemporalINFO69_2;
-END IF;
-
-IF TEMPORAL = 'TemporalINFO69_3' THEN
-	EXECUTE 'COPY TemporalINFO69_3 from ''' || ruta || ''' delimiter '','' csv header';
-
-	INSERT INTO "BaseSistemaHistorico"."INF69"(
-		"RFC", "RAZON_SOC", "TPO_PERS", 
-		"SUPUESTO", "FH_PRIM_PUB", "CVE_DESCARGA", "FH_HIST",
-		"AGRUPACION", "SELECCION")
-	SELECT "RFC", "RAZON_SOC", 
-		TRIM(BOTH FROM "TPO_PERS") AS TPO_PERS,
-		"SUPUESTO", 
-		to_date("FH_PRIM_PUB",'DD/MM/YYYY') AS "FH_PRIM_PUB", 
-		CVE_DESCARGA AS "CVE_DESCARGA", 
-		NOW() AS "FH_HIST",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO'
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 'DELITO FISCAL'
-			ELSE "SUPUESTO"
-		END AS "AGRUPACION",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 1
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 2
-			WHEN "SUPUESTO" = 'FIRMES' THEN 3
-			WHEN "SUPUESTO" = 'EXIGIBLES' THEN 4
-			WHEN "SUPUESTO" = 'RETORNO INVERSIONES' THEN 5
-			WHEN "SUPUESTO" = 'CONDONADOS' THEN 6
-			WHEN "SUPUESTO" = 'CANCELADOS' THEN 7
-		END AS "SELECCION"
-	FROM TemporalINFO69_3;
-END IF;
-
-IF TEMPORAL = 'TemporalINFO69_4' THEN
-	EXECUTE 'COPY TemporalINFO69_4 from ''' || ruta || ''' delimiter '','' csv header';
-
-	INSERT INTO "BaseSistemaHistorico"."INF69"(
-		"RFC", "RAZON_SOC", "TPO_PERS", 
-		"SUPUESTO", "FH_PRIM_PUB", "CVE_DESCARGA", "FH_HIST",
-		"AGRUPACION", "SELECCION")
-	SELECT "RFC", "RAZON_SOC", 
-		TRIM(BOTH FROM "TPO_PERS") AS TPO_PERS,
-		"SUPUESTO", 
-		to_date("FH_PRIM_PUB",'DD/MM/YYYY') AS "FH_PRIM_PUB", 
-		CVE_DESCARGA AS "CVE_DESCARGA", 
-		NOW() AS "FH_HIST",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO'
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 'DELITO FISCAL'
-			ELSE "SUPUESTO"
-		END AS "AGRUPACION",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 1
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 2
-			WHEN "SUPUESTO" = 'FIRMES' THEN 3
-			WHEN "SUPUESTO" = 'EXIGIBLES' THEN 4
-			WHEN "SUPUESTO" = 'RETORNO INVERSIONES' THEN 5
-			WHEN "SUPUESTO" = 'CONDONADOS' THEN 6
-			WHEN "SUPUESTO" = 'CANCELADOS' THEN 7
-		END AS "SELECCION"
-	FROM TemporalINFO69_4;
-END IF;
-
-IF TEMPORAL = 'TemporalINFO69_5' THEN
-	EXECUTE 'COPY TemporalINFO69_5 from ''' || ruta || ''' delimiter '','' csv header';
-
-	INSERT INTO "BaseSistemaHistorico"."INF69"(
-		"RFC", "RAZON_SOC", "TPO_PERS", 
-		"SUPUESTO", "FH_PRIM_PUB", "CVE_DESCARGA", "FH_HIST",
-		"AGRUPACION", "SELECCION")
-	SELECT "RFC", "RAZON_SOC", 
-		TRIM(BOTH FROM "TPO_PERS") AS TPO_PERS,
-		"SUPUESTO", 
-		to_date("FH_PRIM_PUB",'DD/MM/YYYY') AS "FH_PRIM_PUB", 
-		CVE_DESCARGA AS "CVE_DESCARGA", 
-		NOW() AS "FH_HIST",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO'
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 'DELITO FISCAL'
-			ELSE "SUPUESTO"
-		END AS "AGRUPACION",
-		CASE 
-			WHEN "SUPUESTO" = 'NO LOCALIZADOS' THEN 1
-			WHEN "SUPUESTO" = 'SENTENCIAS' THEN 2
-			WHEN "SUPUESTO" = 'FIRMES' THEN 3
-			WHEN "SUPUESTO" = 'EXIGIBLES' THEN 4
-			WHEN "SUPUESTO" = 'RETORNO INVERSIONES' THEN 5
-			WHEN "SUPUESTO" = 'CONDONADOS' THEN 6
-			WHEN "SUPUESTO" = 'CANCELADOS' THEN 7
-		END AS "SELECCION"
-	FROM TemporalINFO69_5;
-END IF;
-
-DROP TABLE IF EXISTS TemporalINFO69_1;
-DROP TABLE IF EXISTS TemporalINFO69_2;
-DROP TABLE IF EXISTS TemporalINFO69_3;
-DROP TABLE IF EXISTS TemporalINFO69_4;
-DROP TABLE IF EXISTS TemporalINFO69_5;
-
-end;
-$$;
-
-
-ALTER PROCEDURE "BaseSistema"."CargaINFO69"(cve_descarga character, file_name character, temporal character, ruta character) OWNER TO postgres;
-
---
--- TOC entry 387 (class 1255 OID 39679)
--- Name: CargaINFO69B(character, character, character, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
---
-
-CREATE PROCEDURE "BaseSistema"."CargaINFO69B"(cve_descarga character, file_name character, temporal character, ruta character)
-    LANGUAGE plpgsql
-    AS $$
---DECLARE ruta character(500);
-begin
-
---ruta := '/home/master/Documentos/Google Drive/Proyectos Personales/Grit/SUKARNE/Listado 69B/' || FILE_NAME;
-ruta:= ruta || file_name;
-
-CREATE TEMP TABLE IF NOT EXISTS TemporalINFO69B_1
-(
-    "NO" character(70) COLLATE pg_catalog."default",
-    "RFC" character(13) COLLATE pg_catalog."default",
-    "NAME_CONTR" character(500) COLLATE pg_catalog."default",
-    "SITUACION_CONTR" character(40) COLLATE pg_catalog."default",
-    "FH_OFIC_GLO_PRESUN_SAT" character(150) COLLATE pg_catalog."default",
-    
-	"FH_PUB_PRESUN_SAT" character(150) COLLATE pg_catalog."default",
-    "FH_OFIC_GLO_PRESUN_DOF" character(150) COLLATE pg_catalog."default",
-    "FH_PUB_PRESUN_DOF" character(150) COLLATE pg_catalog."default",
-    "FH_PUB_DESV_SAT" character(150) COLLATE pg_catalog."default",
-    "FH_OFIC_GLO_DESV_SAT" character(150) COLLATE pg_catalog."default",
-    
-	"FH_PUB_DESV_DOF" character(150) COLLATE pg_catalog."default",
-    "FH_OFIC_GLO_DESV_DOF" character(150) COLLATE pg_catalog."default",
-    "FH_PUB_SAT_DEF" character(150) COLLATE pg_catalog."default",
-    "FH_PUB_DOF_DEF" character(150) COLLATE pg_catalog."default",
-    "FH_OFIC_GLO_SENT_FAV" character(150) COLLATE pg_catalog."default",
-    
-	"FH_PUB_SENT_FAV_SAT" character(150) COLLATE pg_catalog."default",
-    "FH_OFIC_GLO_SENT_FAV_SAT" character(150) COLLATE pg_catalog."default",
-    "FH_PUB_SENT_FAV_DOF" character(150) COLLATE pg_catalog."default",
-    "BCO1" character(15) COLLATE pg_catalog."default",
-	"BCO2" character(15) COLLATE pg_catalog."default",
-	
-	"BCO3" character(15) COLLATE pg_catalog."default"
-); 
-
-IF TEMPORAL = 'TemporalINFO69B_1' THEN
-	EXECUTE 'COPY TemporalINFO69B_1 from ''' || ruta || ''' delimiter '','' csv header';
-
-	INSERT INTO "BaseSistemaHistorico"."INF69B"(
-		"NO", "RFC", "NAME_CONTR", "SITUACION_CONTR", "FH_OFIC_GLO_PRESUN_SAT", 
-		"FH_PUB_PRESUN_SAT", "FH_OFIC_GLO_PRESUN_DOF", "FH_PUB_PRESUN_DOF", 
-		"FH_PUB_DESV_SAT", "FH_OFIC_GLO_DESV_SAT", "FH_PUB_DESV_DOF", 
-		"FH_OFIC_GLO_DESV_DOF", "FH_PUB_SAT_DEF", "FH_PUB_DOF_DEF", "FH_OFIC_GLO_SENT_FAV", 
-		"FH_PUB_SENT_FAV_SAT", "FH_OFIC_GLO_SENT_FAV_SAT", "FH_PUB_SENT_FAV_DOF", 
-		"CVE_DESCARGA", "FH_HIST", "FH_PUB_69B"
-		)
-	SELECT 
-		TO_NUMBER("NO",'999999999') AS "NO", 
-		"RFC", "NAME_CONTR", "SITUACION_CONTR", 
-		"FH_OFIC_GLO_PRESUN_SAT",
-		to_date("FH_PUB_PRESUN_SAT", 'DD/MM/YYYY') AS "FH_PUB_PRESUN_SAT",
-		"FH_OFIC_GLO_PRESUN_DOF",
-		to_date("FH_PUB_PRESUN_DOF", 'DD/MM/YYYY') AS "FH_PUB_PRESUN_DOF",
-		to_date("FH_PUB_DESV_SAT", 'DD/MM/YYYY') AS "FH_PUB_DESV_SAT",
-		"FH_OFIC_GLO_DESV_SAT",
-		to_date("FH_PUB_DESV_DOF", 'DD/MM/YYYY') AS "FH_PUB_DESV_DOF",
-		"FH_OFIC_GLO_DESV_DOF",
-		to_date("FH_PUB_SAT_DEF", 'DD/MM/YYYY') AS "FH_PUB_SAT_DEF",
-		to_date("FH_PUB_DOF_DEF", 'DD/MM/YYYY') AS "FH_PUB_DOF_DEF",
-		"FH_OFIC_GLO_SENT_FAV",
-		to_date("FH_PUB_SENT_FAV_SAT", 'DD/MM/YYYY') AS "FH_PUB_SENT_FAV_SAT",
-		"FH_OFIC_GLO_SENT_FAV_SAT",
-		to_date("FH_PUB_SENT_FAV_DOF", 'DD/MM/YYYY') AS "FH_PUB_SENT_FAV_DOF",
-		CVE_DESCARGA AS "CVE_DESCARGA",
-		NOW() AS "FH_HIST",
-		CASE
-			WHEN "SITUACION_CONTR" = 'Presunto' THEN to_date("FH_PUB_PRESUN_SAT", 'DD/MM/YYYY')
-			WHEN "SITUACION_CONTR" = 'Desvirtuado' THEN to_date("FH_PUB_DESV_SAT", 'DD/MM/YYYY')
-			WHEN "SITUACION_CONTR" = 'Definitivo' THEN to_date("FH_PUB_SAT_DEF", 'DD/MM/YYYY')
-			WHEN "SITUACION_CONTR" = 'Sentencia Favorable' THEN to_date("FH_PUB_SENT_FAV_SAT", 'DD/MM/YYYY')
-		END AS "FH_PUB_69B"
-	FROM TemporalINFO69B_1
-	WHERE ("NO" ~ '^[0-9]') = TRUE;
-END IF;
-
-DROP TABLE IF EXISTS TemporalINFO69B_1;
-
-end;
-$$;
-
-
-ALTER PROCEDURE "BaseSistema"."CargaINFO69B"(cve_descarga character, file_name character, temporal character, ruta character) OWNER TO postgres;
 
 --
 -- TOC entry 336 (class 1255 OID 42034)
@@ -580,6 +280,8 @@ begin
 		TRUNCATE TABLE "BaseSistema"."INF69B";
 		
 		INSERT INTO "BaseSistema"."INF69"
+			("ID_INF", "RFC", "RAZON_SOC", "TPO_PERS", "SUPUESTO", 
+			"FH_PRIM_PUB", "MNTO", "FH_PUB", "AGRUPACION", "SELECCION")
 		SELECT 
 			"ID_INF", "RFC", "RAZON_SOC", "TPO_PERS", "SUPUESTO", 
 			"FH_PRIM_PUB", "MNTO", "FH_PUB", "AGRUPACION", "SELECCION"
@@ -587,6 +289,12 @@ begin
 		WHERE "CVE_DESCARGA" = cve_descarga;
 
 		INSERT INTO "BaseSistema"."INF69B"
+			("ID_INF", "NO", "RFC", "NAME_CONTR", "SITUACION_CONTR", 
+			"FH_OFIC_GLO_PRESUN_SAT", "FH_PUB_PRESUN_SAT", "FH_OFIC_GLO_PRESUN_DOF", 
+			"FH_PUB_PRESUN_DOF", "FH_PUB_DESV_SAT", "FH_OFIC_GLO_DESV_SAT", 
+			"FH_PUB_DESV_DOF", "FH_OFIC_GLO_DESV_DOF", "FH_PUB_SAT_DEF", 
+			"FH_PUB_DOF_DEF", "FH_OFIC_GLO_SENT_FAV", "FH_PUB_SENT_FAV_SAT", 
+			"FH_OFIC_GLO_SENT_FAV_SAT", "FH_PUB_SENT_FAV_DOF", "FH_PUB_69B")
 		SELECT 
 			"ID_INF", "NO", "RFC", "NAME_CONTR", "SITUACION_CONTR", 
 			"FH_OFIC_GLO_PRESUN_SAT", "FH_PUB_PRESUN_SAT", "FH_OFIC_GLO_PRESUN_DOF", 
@@ -609,7 +317,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CopiaINFO69y69B"(cve_descarga character) OWNER TO postgres;
 
 --
--- TOC entry 350 (class 1255 OID 42442)
+-- TOC entry 349 (class 1255 OID 42442)
 -- Name: CopiaINFOMETA(character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -644,7 +352,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CopiaINFOMETA"(cve_descarga character) OWNER TO postgres;
 
 --
--- TOC entry 388 (class 1255 OID 45477)
+-- TOC entry 386 (class 1255 OID 45477)
 -- Name: DescargaCredenciales(character); Type: FUNCTION; Schema: BaseSistema; Owner: postgres
 --
 
@@ -1014,15 +722,15 @@ ALTER TABLE "BaseSistema"."CFGFILECOLUMNS_ID_COLUMN_seq" OWNER TO postgres;
 
 CREATE TABLE "BaseSistema"."CFGFILECOLUMNS" (
     "ID_COL" integer DEFAULT nextval('"BaseSistema"."CFGFILECOLUMNS_ID_COLUMN_seq"'::regclass) NOT NULL,
-    "NAME_COL" character(25),
-    "TYPE_COL" character(25),
-    "IS_REQ" bit(1) NOT NULL,
-    "ID_FILE" bigint,
+    "COLUMNA" character(100),
+    "CAMPO" character(100),
     "FH_ALTA" timestamp without time zone,
     "FH_BAJA" timestamp without time zone,
     "ID_USR_ALTA" bigint,
     "ID_USR_BAJA" bigint,
-    "STATUS" bigint
+    "STATUS" bigint,
+    "REG" character(100),
+    "VALOR" character(5000)
 );
 
 
@@ -1108,9 +816,7 @@ CREATE TABLE "BaseSistema"."INF69B" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1118,7 +824,9 @@ CREATE TABLE "BaseSistema"."INF69B" (
     "FH_PUB_SENT_FAV_SAT" date,
     "FH_OFIC_GLO_SENT_FAV_SAT" character(150),
     "FH_PUB_SENT_FAV_DOF" date,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 
 
@@ -1150,10 +858,11 @@ CREATE TABLE "BaseSistema"."LOGDESCARGAWSAUTH" (
     "ID_RFC" bigint NOT NULL,
     "FH_INI" timestamp without time zone,
     "FH_FIN" timestamp without time zone,
-    "TIPO" character(5) NOT NULL,
+    "TIPO" character(15) NOT NULL,
     "TOKEN" text,
     "STATUS" bigint,
-    "MSGERROR" text
+    "MSGERROR" text,
+    "CVE_CARGA" character(15)
 );
 
 
@@ -1185,9 +894,10 @@ CREATE TABLE "BaseSistema"."LOGDESCARGAWSPROCESO" (
     "ID_RFC" bigint NOT NULL,
     "FH_INI" timestamp without time zone,
     "FH_FIN" timestamp without time zone,
-    "TIPO" character(5) NOT NULL,
+    "TIPO" character(15) NOT NULL,
     "IDPROCESO" text,
-    "STATUS" bigint
+    "STATUS" bigint,
+    "MSGERROR" text
 );
 
 
@@ -1338,9 +1048,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1350,7 +1058,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 )
 PARTITION BY RANGE ("FH_HIST");
 
@@ -1372,9 +1083,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m09" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1384,7 +1093,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m09" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2019m09" FOR VALUES FROM ('2019-09-01') TO ('2019-10-01');
 
@@ -1406,9 +1118,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m10" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1418,7 +1128,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m10" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2019m10" FOR VALUES FROM ('2019-10-01') TO ('2019-11-01');
 
@@ -1440,9 +1153,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m11" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1452,7 +1163,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m11" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2019m11" FOR VALUES FROM ('2019-11-01') TO ('2019-12-01');
 
@@ -1474,9 +1188,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m12" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1486,7 +1198,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2019m12" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2019m12" FOR VALUES FROM ('2019-12-01') TO ('2020-01-01');
 
@@ -1508,9 +1223,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m01" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1520,7 +1233,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m01" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m01" FOR VALUES FROM ('2020-01-01') TO ('2020-02-01');
 
@@ -1542,9 +1258,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m02" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1554,7 +1268,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m02" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m02" FOR VALUES FROM ('2020-02-01') TO ('2020-03-01');
 
@@ -1576,9 +1293,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m03" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1588,7 +1303,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m03" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m03" FOR VALUES FROM ('2020-03-01') TO ('2020-04-01');
 
@@ -1610,9 +1328,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m04" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1622,7 +1338,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m04" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m04" FOR VALUES FROM ('2020-04-01') TO ('2020-05-01');
 
@@ -1644,9 +1363,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m05" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1656,7 +1373,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m05" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m05" FOR VALUES FROM ('2020-05-01') TO ('2020-06-01');
 
@@ -1678,9 +1398,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m06" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1690,7 +1408,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m06" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m06" FOR VALUES FROM ('2020-06-01') TO ('2020-07-01');
 
@@ -1712,9 +1433,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m07" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1724,7 +1443,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m07" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m07" FOR VALUES FROM ('2020-07-01') TO ('2020-08-01');
 
@@ -1746,9 +1468,7 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m08" (
     "FH_PUB_PRESUN_SAT" date,
     "FH_OFIC_GLO_PRESUN_DOF" character(150),
     "FH_PUB_PRESUN_DOF" date,
-    "FH_PUB_DESV_SAT" date,
     "FH_OFIC_GLO_DESV_SAT" character(150),
-    "FH_PUB_DESV_DOF" date,
     "FH_OFIC_GLO_DESV_DOF" character(150),
     "FH_PUB_SAT_DEF" date,
     "FH_PUB_DOF_DEF" date,
@@ -1758,7 +1478,10 @@ CREATE TABLE "BaseSistemaHistorico"."INF69B_y2020m08" (
     "FH_PUB_SENT_FAV_DOF" date,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "FH_PUB_69B" date
+    "FH_PUB_69B" date,
+    "FH_OFIC_GLO_SENT_FAV_1" character(150),
+    "FH_PUB_DESV_SAT" character(150),
+    "FH_PUB_DESV_DOF" character(150)
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHistorico"."INF69B_y2020m08" FOR VALUES FROM ('2020-08-01') TO ('2020-09-01');
 
@@ -2764,7 +2487,8 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTE" (
     "USOCFDI" character(3),
     "TOTALIMPUESTOSRETENIDOS" double precision,
     "TOTALIMPUESTOSTRASLADADOS" double precision,
-    "ID_CFDI" bigint
+    "ID_CFDI" bigint,
+    "CVE_DESCARGA" character(15)
 );
 
 
@@ -3684,6 +3408,7 @@ INSERT INTO "BaseSistema"."CATSTATUS" VALUES (29, 11, 9);
 INSERT INTO "BaseSistema"."CATSTATUS" VALUES (30, 11, 10);
 INSERT INTO "BaseSistema"."CATSTATUS" VALUES (31, 11, 11);
 INSERT INTO "BaseSistema"."CATSTATUS" VALUES (32, 11, 12);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (33, 9, 12);
 
 
 --
@@ -3693,13 +3418,11 @@ INSERT INTO "BaseSistema"."CATSTATUS" VALUES (32, 11, 12);
 --
 
 
-
 --
 -- TOC entry 3690 (class 0 OID 45434)
 -- Dependencies: 330
 -- Data for Name: CFGCLTESCREDENCIALES; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
-
 
 
 --
@@ -3716,6 +3439,7 @@ INSERT INTO "BaseSistema"."CFGCLTESREPOSITORIOS" VALUES (2, 'InfUsuario     ', '
 -- Dependencies: 226
 -- Data for Name: CFGCLTESRFC; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
+
 
 --
 -- TOC entry 3593 (class 0 OID 38338)
@@ -3747,6 +3471,37 @@ INSERT INTO "BaseSistema"."CFGFILE" VALUES (10, '69   ', 'LISTADO 69 - Retorno  
 -- Data for Name: CFGFILECOLUMNS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
 
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (8, 'unnamed: 7                                                                                          ', '"BCO1" character(15) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, NULL, NULL);
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (9, 'unnamed: 8                                                                                          ', '"BCO2" character(15) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, NULL, NULL);
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (10, 'unnamed: 5                                                                                          ', '"BCO3" character(15) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, NULL, NULL);
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (11, 'unnamed: 6                                                                                          ', '"BCO4" character(15) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, NULL, NULL);
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (14, 'situación del contribuyente                                                                         ', '"SITUACION_CONTR" character(40) COLLATE pg_catalog."default"                                        ', NULL, NULL, NULL, NULL, 12, '"SITUACION_CONTR"                                                                                   ', 'TRIM(BOTH FROM "SITUACION_CONTR") AS "SITUACION_CONTR"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (15, 'número y fecha de oficio global de presunción                                                       ', '"FH_OFIC_GLO_PRESUN_SAT" character(150) COLLATE pg_catalog."default"                                ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_PRESUN_SAT"                                                                            ', 'TRIM(BOTH FROM "FH_OFIC_GLO_PRESUN_SAT") AS "FH_OFIC_GLO_PRESUN_SAT"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (1, 'rfc                                                                                                 ', '"RFC" character(13) COLLATE pg_catalog."default"                                                    ', NULL, NULL, NULL, NULL, 12, '"RFC"                                                                                               ', '"RFC"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (2, 'razÓn social                                                                                        ', '"RAZON_SOC" character(255) COLLATE pg_catalog."default"                                             ', NULL, NULL, NULL, NULL, 12, '"RAZON_SOC"                                                                                         ', 'TRIM(BOTH FROM "RAZON_SOC") AS "RAZON_SOC"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (3, 'tipo persona                                                                                        ', '"TPO_PERS" character(2) COLLATE pg_catalog."default"                                                ', NULL, NULL, NULL, NULL, 12, '"TPO_PERS"                                                                                          ', 'TRIM(BOTH FROM "TPO_PERS") AS "TPO_PERS"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (4, 'supuesto                                                                                            ', '"SUPUESTO" character(20) COLLATE pg_catalog."default"                                               ', NULL, NULL, NULL, NULL, 12, '"SUPUESTO"                                                                                          ', 'TRIM(BOTH FROM "SUPUESTO") AS "SUPUESTO"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (5, 'fechas de primera publicacion                                                                       ', '"FH_PRIM_PUB" character(30) COLLATE pg_catalog."default"                                            ', NULL, NULL, NULL, NULL, 12, '"FH_PRIM_PUB"                                                                                       ', 'to_date("FH_PRIM_PUB",''DD/MM/YYYY'') AS "FH_PRIM_PUB"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (6, 'monto                                                                                               ', '"MNTO" character(30) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, '"MNTO"                                                                                              ', '"MNTO"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (7, 'fecha de publicación (con monto de acuerdo a la ley de transparencia                                ', '"FH_PUB" character(30) COLLATE pg_catalog."default"                                                 ', NULL, NULL, NULL, NULL, 12, '"FH_PUB"                                                                                            ', 'to_date("FH_PUB",''DD/MM/YYYY'') as "FH_PUB"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (12, 'no                                                                                                  ', '"NO" character(70) COLLATE pg_catalog."default"                                                     ', NULL, NULL, NULL, NULL, 12, '"NO"                                                                                                ', 'TO_NUMBER("NO",''999999999'') AS "NO"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (13, 'nombre del contribuyente                                                                            ', '"NAME_CONTR" character(500) COLLATE pg_catalog."default"                                            ', NULL, NULL, NULL, NULL, 12, '"NAME_CONTR"                                                                                        ', 'TRIM(BOTH FROM "NAME_CONTR") AS "NAME_CONTR"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (16, 'publicación página sat presuntos                                                                    ', '"FH_PUB_PRESUN_SAT" character(150) COLLATE pg_catalog."default"                                     ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_PRESUN_SAT"                                                                                 ', 'to_date("FH_PUB_PRESUN_SAT", ''DD/MM/YYYY'') AS "FH_PUB_PRESUN_SAT"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (17, 'número y fecha de oficio global de presunción.1                                                     ', '"FH_OFIC_GLO_PRESUN_DOF" character(150) COLLATE pg_catalog."default"                                ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_PRESUN_DOF"                                                                            ', 'TRIM(BOTH FROM "FH_OFIC_GLO_PRESUN_DOF") AS "FH_OFIC_GLO_PRESUN_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (18, 'publicación dof presuntos                                                                           ', '"FH_PUB_PRESUN_DOF" character(150) COLLATE pg_catalog."default"                                     ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_PRESUN_DOF"                                                                                 ', 'to_date("FH_PUB_PRESUN_DOF", ''DD/MM/YYYY'') AS "FH_PUB_PRESUN_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (20, 'número y fecha de oficio global de contribuyentes que desvirtuaron                                  ', '"FH_OFIC_GLO_DESV_SAT" character(150) COLLATE pg_catalog."default"                                  ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_DESV_SAT"                                                                              ', 'TRIM(BOTH FROM "FH_OFIC_GLO_DESV_SAT") AS "FH_OFIC_GLO_DESV_SAT"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (22, 'número y fecha de oficio global de definitivos                                                      ', '"FH_OFIC_GLO_DESV_DOF" character(150) COLLATE pg_catalog."default"                                  ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_DESV_DOF"                                                                              ', 'TRIM(BOTH FROM "FH_OFIC_GLO_DESV_DOF") AS "FH_OFIC_GLO_DESV_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (23, 'publicación página sat definitivos                                                                  ', '"FH_PUB_SAT_DEF" character(150) COLLATE pg_catalog."default"                                        ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_SAT_DEF"                                                                                    ', 'to_date("FH_PUB_SAT_DEF", ''DD/MM/YYYY'') AS "FH_PUB_SAT_DEF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (24, 'publicación dof definitivos                                                                         ', '"FH_PUB_DOF_DEF" character(150) COLLATE pg_catalog."default"                                        ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_DOF_DEF"                                                                                    ', 'to_date("FH_PUB_DOF_DEF", ''DD/MM/YYYY'') AS "FH_PUB_DOF_DEF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (25, 'número y fecha de oficio global de sentencia favorable                                              ', '"FH_OFIC_GLO_SENT_FAV" character(150) COLLATE pg_catalog."default"                                  ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_SENT_FAV"                                                                              ', 'TRIM(BOTH FROM "FH_OFIC_GLO_SENT_FAV") AS "FH_OFIC_GLO_SENT_FAV"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (26, 'publicación página sat sentencia favorable                                                          ', '"FH_OFIC_GLO_SENT_FAV_SAT" character(150) COLLATE pg_catalog."default"                              ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_SENT_FAV_SAT"                                                                          ', 'to_date("FH_OFIC_GLO_SENT_FAV_SAT", ''DD/MM/YYYY'') AS "FH_OFIC_GLO_SENT_FAV_SAT"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (27, 'número y fecha de oficio global de sentencia favorable.1                                            ', '"FH_OFIC_GLO_SENT_FAV_1" character(150) COLLATE pg_catalog."default"                                ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_SENT_FAV_1"                                                                            ', 'TRIM(BOTH FROM "FH_OFIC_GLO_SENT_FAV_1") AS "FH_OFIC_GLO_SENT_FAV_1"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (28, 'publicación dof sentencia favorable                                                                 ', '"FH_PUB_SENT_FAV_DOF" character(150) COLLATE pg_catalog."default"                                   ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_SENT_FAV_DOF"                                                                               ', 'to_date("FH_PUB_SENT_FAV_DOF", ''DD/MM/YYYY'') AS "FH_PUB_SENT_FAV_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (29, 'unnamed: 18                                                                                         ', '"BCO5" character(15) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, NULL, NULL);
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (30, 'unnamed: 19                                                                                         ', '"BCO6" character(15) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, NULL, NULL);
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (31, 'unnamed: 20                                                                                         ', '"BCO7" character(15) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, NULL, NULL);
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (19, 'publicación página sat desvirtuados                                                                 ', '"FH_PUB_DESV_SAT" character(150) COLLATE pg_catalog."default"                                       ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_DESV_SAT"                                                                                   ', 'TRIM(BOTH FROM "FH_PUB_DESV_SAT") AS "FH_PUB_DESV_SAT"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirtuados                                                                        ', '"FH_PUB_DESV_DOF" character(150) COLLATE pg_catalog."default"                                       ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_DESV_DOF"                                                                                   ', 'TRIM(BOTH FROM "FH_PUB_DESV_DOF") AS "FH_PUB_DESV_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ');
 
 
 --
@@ -4304,7 +4059,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGALMACEN_ID_ALMACEN_seq"', 1, false);
 -- Name: CFGCLTESCREDENCIALES_ID_CRED_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CFGCLTESCREDENCIALES_ID_CRED_seq"', 11, true);
+SELECT pg_catalog.setval('"BaseSistema"."CFGCLTESCREDENCIALES_ID_CRED_seq"', 1, true);
 
 
 --
@@ -4322,7 +4077,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGFILECOLUMNS_ID_COLUMN_seq"', 1, fals
 -- Name: CFGFILEUNLOADS_ID_UNLOAD_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"', 1, true);
+SELECT pg_catalog.setval('"BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"', 195, true);
 
 
 --
@@ -4487,7 +4242,7 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDITOTAL_ID_CFDI_seq"', 1, false);
 SELECT pg_catalog.setval('"InfUsuario"."CFDITRASLADOS_ID_TRASLADO_seq"', 1, false);
 
 
--- Completed on 2019-10-03 11:07:38 CDT
+-- Completed on 2019-10-08 09:33:26 CDT
 
 --
 -- PostgreSQL database dump complete
