@@ -4,6 +4,7 @@
 import sys
 import os
 import requests
+import io
 from time import localtime, strftime
 from clint.textui import progress
 from chardet import detect
@@ -11,7 +12,8 @@ from chardet import detect
 def url_response(url):
     path, url, pathnvo = url
     print(path)
-    os.remove(pathnvo)
+    if os.path.exists(pathnvo):
+        os.remove(pathnvo)
     r = requests.get(url, stream = True)
     with open(path, 'wb') as f:
         total_length = int(r.headers.get('content-length'))
@@ -22,7 +24,7 @@ def url_response(url):
     from_codec = get_encoding_type(path)
     print("**** CONVIRTIENDO ARCHIVO ***", pathnvo)
 
-    with open(path, 'r', encoding=from_codec) as f, open(pathnvo, 'w', encoding='utf-8') as e:
+    with io.open(path, 'r', encoding=from_codec) as f, io.open(pathnvo, 'w', encoding='utf-8') as e:
         text = f.read() 
         e.write(text)
         os.remove(path) 
