@@ -7,6 +7,7 @@ import datetime
 import os
 import psycopg2
 import shlex
+import codecs
 import subprocess as sp
 from psycopg2 import Error
 from xml.dom import minidom
@@ -34,7 +35,7 @@ def CerrarConexionPostgresql(connection):
 
 def getAtributos(connection, nomFileXml, cvedescarga):
     try:
-        
+
         xmlDoc = minidom.parse(nomFileXml)
         nodes = xmlDoc.childNodes
         comprobante = nodes[0]
@@ -49,182 +50,344 @@ def getAtributos(connection, nomFileXml, cvedescarga):
         atributos['NoCertificado'] = comprobante.getAttribute('NoCertificado')
         atributos['Certificado'] = comprobante.getAttribute('Certificado')
         atributos['CondicionesDePago'] = comprobante.getAttribute('CondicionesDePago')
-        atributos['Subtotal'] = comprobante.getAttribute('Subtotal')
-        atributos['Descuento'] = comprobante.getAttribute('Descuento')
+        if len(comprobante.getAttribute('Subtotal')) == 0: 
+            Subtotal = "0" 
+        else: 
+            Subtotal = comprobante.getAttribute('Subtotal')
+        atributos['Subtotal'] = Subtotal
+        if len(comprobante.getAttribute('Descuento')) == 0: 
+            Descuento = "0" 
+        else: 
+            Descuento = comprobante.getAttribute('Descuento')
+        atributos['Descuento'] = Descuento
         atributos['Moneda'] = comprobante.getAttribute('Moneda')
-        atributos['TipoCambio'] = comprobante.getAttribute('TipoCambio')
-        atributos['Total'] = comprobante.getAttribute('Total')
+        if len(comprobante.getAttribute('TipoCambio')) == 0: 
+            TipoCambio = "0" 
+        else: 
+            TipoCambio = comprobante.getAttribute('TipoCambio')
+        atributos['TipoCambio'] = TipoCambio
+        if len(comprobante.getAttribute('Total')) == 0: 
+            Total = "0" 
+        else: 
+            Total = comprobante.getAttribute('Total')
+        atributos['Total'] = Total
         atributos['TipoDeComprobante'] = comprobante.getAttribute('TipoDeComprobante')
         atributos['MetodoPago'] = comprobante.getAttribute('MetodoPago')
         atributos['LugarExpedicion'] = comprobante.getAttribute('LugarExpedicion')
         atributos['Confirmacion'] = comprobante.getAttribute('Confirmacion')
 
-        emisor = comprobante.getElementsByTagName('cfdi:Emisor')
-        atributos['RfcEmisor'] = emisor.getAttribute('Rfc')
-        atributos['NombreEmisor'] = emisor.getAttribute('Nombre')
-        atributos['RegimenFiscal'] = emisor.getAttribute('RegimenFiscal')
-
-        receptor = comprobante.getElementsByTagName('cfdi:Receptor')
-        atributos['RfcReceptor'] = receptor.getAttribute('Rfc')
-        atributos['NombreReceptor'] = receptor.getAttribute('Nombre')
-        atributos['ResidenciaFiscal'] = receptor.getAttribute('ResidenciaFiscal')
-        atributos['NumRegIdTrib'] = receptor.getAttribute('NumRegIdTrib')
-        atributos['UsoCFDI'] = receptor.getAttribute('UsoCFDI')
-
-        impuestos = comprobante.getElementsByTagName("cfdi:Impuestos")
-        atributos['TotalImpuestosRetenidos'] = impuestos.getAttribute('TotalImpuestosRetenidos')
-        atributos['TotalImpuestosTrasladados'] = impuestos.getAttribute('TotalImpuestosTrasladados')
-
-        traslados = impuestos.getElementsByTagName("cfdi:Traslados")
-        traslado = traslados.getElementsByTagName("cfdi:Traslado")
-        atributos['Impuesto'] = traslado.getAttribute('Impuesto')
-        atributos['TipoFactor'] = traslado.getAttribute('TipoFactor')
-        atributos['TasaOCuota'] = traslado.getAttribute('TasaOCuota')
-        atributos['Importe'] = traslado.getAttribute('Importe')
+        emisores = comprobante.getElementsByTagName('cfdi:Emisor')
+        for emisor in emisores:
+            atributos['RfcEmisor'] = emisor.getAttribute('Rfc')
+            atributos['NombreEmisor'] = emisor.getAttribute('Nombre')
+            atributos['RegimenFiscal'] = emisor.getAttribute('RegimenFiscal')
         
-        retenciones = impuestos.getElementsByTagName("cfdi:Retenciones")
-        retencion = retenciones.getElementsByTagName("cfdi:Retencion")
-        atributos['Impuesto'] = retencion.getAttribute('Impuesto')
-        atributos['Importe'] = retencion.getAttribute('Importe')
+        receptores = comprobante.getElementsByTagName('cfdi:Receptor')
+        for receptor in receptores:
+            atributos['RfcReceptor'] = receptor.getAttribute('Rfc')
+            atributos['NombreReceptor'] = receptor.getAttribute('Nombre')
+            atributos['ResidenciaFiscal'] = receptor.getAttribute('ResidenciaFiscal')
+            atributos['NumRegIdTrib'] = receptor.getAttribute('NumRegIdTrib')
+            atributos['UsoCFDI'] = receptor.getAttribute('UsoCFDI')
 
-
-        relacionados = comprobante.getElementsByTagName('cfdi:CfdiRelacionados')
-        atributos['TipoRelacion'] = relacionados[0].getAttribute('TipoRelacion')
-        relacionado = relacionados.getElementsByTagName("cfdi:CfdiRelacionado")
-        for relacion in relacionado:
-            atributos['UUID'] = relacion.getElementsByTagName('UUID')[0]
-
-        conceptos = comprobante.getElementsByTagName('cfdi:Conceptos')
-        for concepto in conceptos:
-            atributos['ClaveProdServ'] = concepto.getAttribute('ClaveProdServ')
-            atributos['NoIdentificacion'] = concepto.getAttribute('NoIdentificacion')
-            atributos['Cantidad'] = concepto.getAttribute('Cantidad')
-            atributos['ClaveUnidad'] = concepto.getAttribute('ClaveUnidad')
-            atributos['Unidad'] = concepto.getAttribute('Unidad')
-            atributos['Descripcion'] = concepto.getAttribute('Descripcion')
-            atributos['ValorUnitario'] = concepto.getAttribute('ValorUnitario')
-            atributos['Importe'] = concepto.getAttribute('Importe')
-            atributos['Descuento'] = concepto.getAttribute('Descuento')
-            impuestos = conceptos.getElementsByTagName('cfdi:Impuestos')
-            for impuesto in impuestos:
-                traslados = impuesto.getElementsByTagName("cfdi:Traslados")
-                for traslado in traslados:
-                    atributos['Base'] = traslado.getAttribute('Base')
-                    atributos['Impuesto'] = traslado.getAttribute('Impuesto')
-                    atributos['TipoFactor'] = traslado.getAttribute('TipoFactor')
-                    atributos['TasaOCuota'] = traslado.getAttribute('TasaOCuota')
-                    atributos['Importe'] = traslado.getAttribute('Importe')
-                retenciones = impuesto.getElementsByTagName('cfdi:Retenciones')
-                for retencion in retenciones:
-                    atributos['Base'] = retencion.getAttribute('Base')
-                    atributos['Impuesto'] = retencion.getAttribute('Impuesto')
-                    atributos['TipoFactor'] = retencion.getAttribute('TipoFactor')
-                    atributos['TasaOCuota'] = retencion.getAttribute('TasaOCuota')
-                    atributos['Importe'] = retencion.getAttribute('Importe')
-                informacionAduaneras = impuesto.getElementsByTagName("cfdi:InformacionAduanera")
-                for informacionAduanera in informacionAduaneras:
-                    atributos['NumeroPedimento'] = informacionAduanera.getAttribute('NumeroPedimento')
-                cuentasPrediales = impuesto.getElementsByTagName("cfdi:CuentaPredial")
-                for cuentapredial in cuentasPrediales:
-                    atributos['Numero'] = cuentapredial.getAttribute('Numero')
-            complementoconceptos = conceptos.getElementsByTagName('cfdi:ComplementoConcepto')
-            partes = complementoconceptos.getElementsByTagName("cfdi:Parte")
-            for parte in partes:
-                atributos['ClaveProdServ'] = parte.getAttribute('ClaveProdServ')
-                atributos['NoIdentificacion'] = parte.getAttribute('NoIdentificacion')
-                atributos['Cantidad'] = parte.getAttribute('Cantidad')
-                atributos['Unidad'] = parte.getAttribute('Unidad')
-                atributos['Descripcion'] = parte.getAttribute('Descripcion')
-                atributos['ValorUnitario'] = parte.getAttribute('ValorUnitario')
-                atributos['Importe'] = parte.getAttribute('Importe')
-                atributos['NumeroPedimento'] = parte.getAttribute('NumeroPedimento')
-                partes = complementoconceptos.getElementsByTagName("cfdi:Parte")
-
-        Traslados = Impuestos[Impuestos.length-1].getElementsByTagName("cfdi:Traslado")
-        for Traslado in Traslados:
-            atributos['Impuesto'] = Traslado.getAttribute('Impuesto')
-            atributos['TipoFactor'] = Traslado.getAttribute('TipoFactor')
-            atributos['TasaOCuota'] = Traslado.getAttribute('TasaOCuota')
-            atributos['Importe'] = Traslado.getAttribute('Importe')
-        Retenciones = Impuestos[Impuestos.length-1].getElementsByTagName("cfdi:Retencion")
-        for Retencion in Retenciones:
-            atributos['Base'] = Retencion.getAttribute('Base')
-            atributos['Impuesto'] = Retencion.getAttribute('Impuesto')
-            atributos['TipoFactor'] = Retencion.getAttribute('TipoFactor')
-            atributos['TasaOCuota'] = Retencion.getAttribute('TasaOCuota')
-            atributos['Importe'] = Retencion.getAttribute('Importe')
-   
-
-
-
-
-        # Conceptos = comprobante.getElementsByTagName("cfdi:Concepto")
-        # for Concepto in Conceptos:
-        #     atributos['ClaveProdServ'] = Concepto.getAttribute('ClaveProdServ')
-        #     atributos['NoIdentificacion'] = Concepto.getAttribute('NoIdentificacion')
-        #     atributos['Cantidad'] = Concepto.getAttribute('Cantidad')
-        #     atributos['ClaveUnidad'] = Concepto.getAttribute('ClaveUnidad')
-        #     atributos['Unidad'] = Concepto.getAttribute('Unidad')
-        #     atributos['Descripcion'] = Concepto.getAttribute('Descripcion')
-        #     atributos['ValorUnitario'] = Concepto.getAttribute('ValorUnitario')
-        #     atributos['Importe'] = Concepto.getAttribute('Importe')
-        #     atributos['Descuento'] = Concepto.getAttribute('Descuento')
-        #     Traslados = Concepto.getElementsByTagName("cfdi:Traslado")
-        #     for Traslado in Traslados:
-        #         atributos['Base'] = Traslado.getAttribute('Base')
-        #         atributos['Impuesto'] = Traslado.getAttribute('Impuesto')
-        #         atributos['TipoFactor'] = Traslado.getAttribute('TipoFactor')
-        #         atributos['TasaOCuota'] = Traslado.getAttribute('TasaOCuota')
-        #         atributos['Importe'] = Traslado.getAttribute('Importe')
-            
-
-
-        # cursor = connection.cursor()
-        # cursor.callproc('CargaCfdiComprobante',[
-        #     atributos['Version'],
-        #     atributos['Serie'],
-        #     atributos['Folio'],
-        #     atributos['Fecha'],
-        #     atributos['Sello'],
-        #     atributos['FormaPago'],
-        #     atributos['NoCertificado'],
-        #     atributos['Certificado'],
-        #     atributos['CondicionesDePago'],
-        #     atributos['Subtotal'],
-        #     atributos['Descuento'],
-        #     atributos['Moneda'],
-        #     atributos['TipoCambio'],
-        #     atributos['Total'],
-        #     atributos['TipoDeComprobante'],
-        #     atributos['MetodoPago'],
-        #     atributos['LugarExpedicion'],
-        #     atributos['Confirmacion'],
-        #     atributos['RfcEmisor'],
-        #     atributos['NombreEmisor'],
-        #     atributos['RegimenFiscal'],
-        #     atributos['RfcReceptor'],
-        #     atributos['NombreReceptor'],
-        #     atributos['ResidenciaFiscal'],
-        #     atributos['NumRegIdTrib'],
-        #     atributos['UsoCFDI'],
-        #     atributos['TotalImpuestosRetenidos'],
-        #     atributos['TotalImpuestosTrasladados'],
-        #     cvedescarga,
-        #             ])
-        # result = cursor.fetchall()
-        # for row in result:
-        #     Id_Comprobante = row[0]
-        #     print(Id_Comprobante)        
-
+        hexlify = codecs.getencoder('hex')
+        atributos['Certificado'] = str(hexlify(str(atributos['Certificado']).encode('utf-8'))[0])[0:5000]
         
-        
-        
+        hexlify = codecs.getencoder('hex')
+        atributos['Sello'] = str(hexlify(str(atributos['Sello']).encode('utf-8'))[0])[0:5000]
+
+        print("**** GUARDANDO COMPROBANTE ***")
+        cursor = connection.cursor()
+        consulta = ""
+        consulta = "INSERT INTO \"InfUsuario\".\"CFDICOMPROBANTE\"( "
+        consulta = consulta + "\"VERSION\", \"SERIE\", \"FOLIO\", \"FECHA\", \"SELLO\", "
+        consulta = consulta + "\"FORMAPAGO\", \"NOCERTIFICADO\", \"CERTIFICADO\", \"CONDICIONESDEPAGO\", \"SUBTOTAL\", "
+        consulta = consulta + "\"DESCUENTO\", \"MONEDA\", \"TIPOCAMBIO\", \"TOTAL\", \"TIPODECOMPROBANTE\", "
+        consulta = consulta + "\"METODOPAGO\", \"LUGAREXPEDICION\", \"CONFIRMACION\", \"RFCEMISOR\", \"NOMBREEMISOR\", "
+        consulta = consulta + "\"REGIMENFISCAL\", \"RFCRECEPTOR\", \"NOMBRERECEPTOR\", \"RESIDENCIAFISICARECEPTOR\", \"NUMREGIDTRIBRECEPTOR\", "
+        consulta = consulta + "\"USOCFDI\", \"CVE_DESCARGA\" )"
+
+        consulta = consulta + " VALUES( "
+        consulta = consulta + "'" + atributos['Version'] + "', '" + atributos['Serie'] + "' ,'" + atributos['Folio'] + "' ,'" + atributos['Fecha'] + "' ,'" + atributos['Sello'] + "', "
+        consulta = consulta + "'" + atributos['FormaPago'] + "', '" + atributos['NoCertificado'] + "', '" + atributos['Certificado'] + "', '" + atributos['CondicionesDePago'] + "', '" + atributos['Subtotal'] + "', "
+        consulta = consulta + "'" + atributos['Descuento'] + "', '" + atributos['Moneda'] + "', '" + atributos['TipoCambio'] + "', '" + atributos['Total'] + "', '" + atributos['TipoDeComprobante'] + "', "
+        consulta = consulta + "'" + atributos['MetodoPago'] + "', '" + atributos['LugarExpedicion'] + "', '" + atributos['Confirmacion'] + "', '" + atributos['RfcEmisor'] + "', '" + atributos['NombreEmisor'] + "', "
+        consulta = consulta + "'" + atributos['RegimenFiscal'] + "', '" + atributos['RfcReceptor'] + "', '" + atributos['NombreReceptor'] + "', '" + atributos['ResidenciaFiscal'] + "', '" + atributos['NumRegIdTrib'] + "', "
+        consulta = consulta + "'" + atributos['UsoCFDI'] + "', '" + str(cvedescarga) + "'"
+        consulta = consulta + ")"
+
+        #print(consulta)
+        cursor.execute(consulta)
+        connection.commit()
+        cursor.close()
+
+        cursor = connection.cursor()
+        consulta = ""
+        consulta = "SELECT \"ID_COMPROBANTE\" FROM \"InfUsuario\".\"CFDICOMPROBANTE\" WHERE \"CVE_DESCARGA\" = '" + cvedescarga + "' "
+        cursor.execute(consulta)
+        if not cursor.rowcount:
+            print("FALLO LA CABECERA DEL COMPROBANTE")
+            return
+        else:
+            RESULTADOS = cursor.fetchall()
+            cursor.close()
+
+        for row in RESULTADOS:
+            if row[0] > 0:
+                idcomprobante = row[0]
+
+                conceptosPrincipal = comprobante.getElementsByTagName('cfdi:Conceptos')
+                for conceptosNodo in conceptosPrincipal:
+                    conceptos = conceptosNodo.getElementsByTagName('cfdi:Concepto')
+                    for concepto in conceptos:
+                        atributos['ClaveProdServ'] = concepto.getAttribute('ClaveProdServ')
+                        atributos['NoIdentificacion'] = concepto.getAttribute('NoIdentificacion')
+                        atributos['Cantidad'] = concepto.getAttribute('Cantidad')
+                        atributos['ClaveUnidad'] = concepto.getAttribute('ClaveUnidad')
+                        atributos['Unidad'] = concepto.getAttribute('Unidad')
+                        atributos['Descripcion'] = concepto.getAttribute('Descripcion')
+                        if len(concepto.getAttribute('ValorUnitario')) == 0: 
+                            ValorUnitario = "0" 
+                        else: 
+                            ValorUnitario = concepto.getAttribute('ValorUnitario')
+                        atributos['ValorUnitario'] = ValorUnitario
+                        if len(concepto.getAttribute('Importe')) == 0: 
+                            Importe = "0" 
+                        else: 
+                            Importe = concepto.getAttribute('Importe')
+                        atributos['Importe'] = Importe
+                        if len(concepto.getAttribute('Descuento')) == 0: 
+                            Descuento = "0" 
+                        else: 
+                            Descuento = concepto.getAttribute('Descuento')
+                        atributos['Descuento'] = Descuento
+
+                        print("**** GUARDANDO CONCEPTOS ***")
+                        cursor = connection.cursor()
+                        consulta = ""
+                        consulta = "INSERT INTO \"InfUsuario\".\"CFDICONCEPTOS\"( "
+                        consulta = consulta + "\"CLAVEPRODSERV\", \"NOIDENTIFICACION\", \"CANTIDAD\", \"CLAVEUNIDAD\", \"UNIDAD\", "
+                        consulta = consulta + "\"DESCRIPCION\", \"VALORUNITARIO\", \"IMPORTE\", \"DESCUENTO\", \"ID_COMPROBANTE\" )"
+                        
+                        consulta = consulta + " VALUES( "
+                        consulta = consulta + "'" + atributos['ClaveProdServ'] + "', '" + atributos['NoIdentificacion'] + "', '" + atributos['Cantidad'] + "', '" + atributos['ClaveUnidad'] + "', '" + atributos['Unidad'] + "', "
+                        consulta = consulta + "'" + atributos['Descripcion'] + "', '" + atributos['ValorUnitario'] + "', '" + atributos['Importe'] + "', '" + atributos['Descuento'] + "', '" + str(idcomprobante) + "'"
+                        consulta = consulta + " )"
+                        
+                        #print(consulta)
+                        cursor.execute(consulta)
+                        connection.commit()
+                        cursor.close()
+
+                        cursor = connection.cursor()
+                        consulta = ""
+                        consulta = "SELECT \"ID_CONCEPTO\" FROM \"InfUsuario\".\"CFDICONCEPTOS\" WHERE \"ID_COMPROBANTE\" = '" + str(idcomprobante) + "' "
+                        cursor.execute(consulta)
+                        if not cursor.rowcount:
+                            print("FALLO LA CABECERA DEL CONCEPTO")
+                            return
+                        else:
+                            RESULTADOS = cursor.fetchall()
+                            cursor.close()
+
+                        for row in RESULTADOS:
+                            if row[0] > 0:
+                                idconcepto = row[0]
+
+                                impuestosPrincipal = concepto.getElementsByTagName('cfdi:Impuestos')
+                                for impuestosNodo in impuestosPrincipal:
+                                    HayTraslados = 0
+                                    HayRetenciones = 1
+
+                                    trasladosPrincipal = impuestosNodo.getElementsByTagName('cfdi:Traslados')
+                                    for trasladosNodo in trasladosPrincipal:
+                                        traslados = trasladosNodo.getElementsByTagName('cfdi:Traslado')
+                                        for traslado in traslados:
+                                            HayTraslados = 1
+                                            if len(traslado.getAttribute('Base')) == 0: 
+                                                Base = "0" 
+                                            else: 
+                                                Base = traslado.getAttribute('Base')
+                                            atributos['Base'] = Base
+                                            atributos['Impuesto'] = traslado.getAttribute('Impuesto')
+                                            atributos['TipoFactor'] = traslado.getAttribute('TipoFactor')
+                                            if len(traslado.getAttribute('TasaOCuota')) == 0: 
+                                                TasaOCuota = "0" 
+                                            else: 
+                                                TasaOCuota = traslado.getAttribute('TasaOCuota')
+                                            atributos['TasaOCuota'] = TasaOCuota
+                                            if len(traslado.getAttribute('Importe')) == 0: 
+                                                Importe = "0" 
+                                            else: 
+                                                Importe = traslado.getAttribute('Importe')
+                                            atributos['Importe'] = Importe
+
+                                            print("**** GUARDANDO IMPUESTOS TRASLADADOS ***")
+                                            cursor = connection.cursor()
+                                            consulta = ""
+                                            consulta = "INSERT INTO \"InfUsuario\".\"CFDICONCEPTOSIMPUESTOSTRASLADOS\"( "
+                                            consulta = consulta + "\"BASE\", \"IMPUESTO\", \"TIPOFACTOR\", "
+                                            consulta = consulta + "\"TASAOCUOTA\", \"IMPORTE\", \"ID_CONCEPTO\" )"
+                                            
+                                            consulta = consulta + " VALUES( "
+                                            consulta = consulta + "'" + atributos['Base'] + "', '" + atributos['Impuesto'] + "', '" + atributos['TipoFactor'] + "', "
+                                            consulta = consulta + "'" + atributos['TasaOCuota'] + "', '" + atributos['Importe'] + "', '" + str(idconcepto) + "' "
+                                            consulta = consulta + " )"
+                                            
+                                            cursor.execute(consulta)
+                                            connection.commit()
+                                            cursor.close()
+
+                                    retencionesPrincipal = impuestosNodo.getElementsByTagName('cfdi:Retenciones')
+                                    for retencionesNodo in retencionesPrincipal:
+                                        retenciones = retencionesNodo.getElementsByTagName('cfdi:Retencion')
+                                        for retencion in retenciones:
+                                            HayRetenciones = 1
+                                            if len(retencion.getAttribute('Base')) == 0: 
+                                                Base = "0" 
+                                            else: 
+                                                Base = retencion.getAttribute('Base')
+                                            atributos['Base'] = Base
+                                            atributos['Impuesto'] = retencion.getAttribute('Impuesto')
+                                            atributos['TipoFactor'] = retencion.getAttribute('TipoFactor')
+                                            if len(retencion.getAttribute('TasaOCuota')) == 0: 
+                                                TasaOCuota = "0" 
+                                            else: 
+                                                TasaOCuota = retencion.getAttribute('TasaOCuota')
+                                            atributos['TasaOCuota'] = TasaOCuota
+                                            if len(retencion.getAttribute('Importe')) == 0: 
+                                                Importe = "0" 
+                                            else: 
+                                                Importe = retencion.getAttribute('Importe')
+                                            atributos['Importe'] = Importe
+
+                                            print("**** GUARDANDO IMPUESTOS RETENCIONES ***")
+                                            cursor = connection.cursor()
+                                            consulta = ""
+                                            consulta = "INSERT INTO \"InfUsuario\".\"CFDICONCEPTOSIMPUESTOSRETENCIONES\"( "
+                                            consulta = consulta + "\"BASE\", \"IMPUESTO\", \"TIPOFACTOR\", "
+                                            consulta = consulta + "\"TASAOCUOTA\", \"IMPORTE\", \"ID_CONCEPTO\" )"
+                                            
+                                            consulta = consulta + " VALUES( "
+                                            consulta = consulta + "'" + atributos['Base'] + "', '" + atributos['Impuesto'] + "', '" + atributos['TipoFactor'] + "', "
+                                            consulta = consulta + "'" + atributos['TasaOCuota'] + "', '" + atributos['Importe'] + "', '" + str(idconcepto) + "' "
+                                            consulta = consulta + " )"
+
+                                            cursor.execute(consulta)
+                                            connection.commit()
+                                            cursor.close()
+
+                                    if HayTraslados == 1:
+                                        impuestosNodo.parentNode.removeChild(impuestosNodo)
+                                    if HayRetenciones == 1:
+                                        retencionesNodo.parentNode.removeChild(retencionesNodo)
+
+                impuestosPrincipal = comprobante.getElementsByTagName('cfdi:Impuestos')
+                for impuestosNodo in impuestosPrincipal:
+                    atributos['TotalImpuestosTrasladados'] = impuestosNodo.getAttribute('TotalImpuestosTrasladados')
+                    trasladosPrincipal = impuestosNodo.getElementsByTagName('cfdi:Traslados')
+                    for trasladosNodo in trasladosPrincipal:
+                        traslados = trasladosNodo.getElementsByTagName('cfdi:Traslado')
+                        for traslado in traslados:
+                            atributos['Impuesto'] = traslado.getAttribute('Impuesto')
+                            atributos['TipoFactor'] = traslado.getAttribute('TipoFactor')
+                            if len(traslado.getAttribute('TasaOCuota')) == 0: 
+                                TasaOCuota = "0" 
+                            else: 
+                                TasaOCuota = traslado.getAttribute('TasaOCuota')
+                            atributos['TasaOCuota'] = TasaOCuota
+                            if len(traslado.getAttribute('Importe')) == 0: 
+                                Importe = "0" 
+                            else: 
+                                Importe = traslado.getAttribute('Importe')
+                            atributos['Importe'] = Importe
+
+                            print("**** GUARDANDO COMPROBANTE IMPUESTOS TRASLADADOS ***")
+                            cursor = connection.cursor()
+                            consulta = ""
+                            consulta = "INSERT INTO \"InfUsuario\".\"CFDICOMPROBANTEIMPUESTOSTRASLADOS\"( "
+                            consulta = consulta + "\"IMPUESTO\", \"TIPOFACTOR\", "
+                            consulta = consulta + "\"TASAOCUOTA\", \"IMPORTE\", \"ID_COMPROBANTE\" )"
+                            
+                            consulta = consulta + " VALUES( "
+                            consulta = consulta + "'" + atributos['Impuesto'] + "', '" + atributos['TipoFactor'] + "', "
+                            consulta = consulta + "'" + atributos['TasaOCuota'] + "', '" + atributos['Importe'] + "', '" + str(idcomprobante) + "' "
+                            consulta = consulta + " )"
+
+                            cursor.execute(consulta)
+                            connection.commit()
+                            cursor.close()
+
+                impuestosPrincipal = comprobante.getElementsByTagName('cfdi:Impuestos')
+                for impuestosNodo in impuestosPrincipal:
+                    atributos['TotalImpuestosRetenidos'] = impuestosNodo.getAttribute('TotalImpuestosRetenidos')
+                    retencionesPrincipal = impuestosNodo.getElementsByTagName('cfdi:Retenciones')
+                    for retencionesNodo in retencionesPrincipal:
+                        retenciones = retencionesNodo.getElementsByTagName('cfdi:Retencion')
+                        for retencion in retenciones:
+                            atributos['Impuesto'] = retencion.getAttribute('Impuesto')
+                            if len(retencion.getAttribute('Importe')) == 0: 
+                                Importe = "0" 
+                            else: 
+                                Importe = retencion.getAttribute('Importe')
+                            atributos['Importe'] = Importe
+
+                            print("**** GUARDANDO COMPROBANTE IMPUESTOS RETENIDOS ***")
+                            cursor = connection.cursor()
+                            consulta = ""
+                            consulta = "INSERT INTO \"InfUsuario\".\"CFDICOMPROBANTEIMPUESTOSRETENIDOS\"( "
+                            consulta = consulta + "\"IMPUESTO\", "
+                            consulta = consulta + "\"IMPORTE\", \"ID_COMPROBANTE\" )"
+                            
+                            consulta = consulta + " VALUES( "
+                            consulta = consulta + "'" + atributos['Impuesto'] + "', "
+                            consulta = consulta + "'" + atributos['Importe'] + "', '" + str(idcomprobante) + "' "
+                            consulta = consulta + " )"
+
+                            cursor.execute(consulta)
+                            connection.commit()
+                            cursor.close()
+
+                complementosPrincipal = comprobante.getElementsByTagName('cfdi:Complemento')
+                for complementoNodo in complementosPrincipal:
+                    complementos = complementoNodo.getElementsByTagName('tfd:TimbreFiscalDigital')
+                    for complemento in complementos:
+                        atributos['Version'] = complemento.getAttribute('Version')
+                        atributos['SelloCFD'] = complemento.getAttribute('SelloCFD')
+                        atributos['NoCertificadoSAT'] = complemento.getAttribute('NoCertificadoSAT')
+                        atributos['RfcProvCertif'] = complemento.getAttribute('RfcProvCertif')
+                        atributos['UUID'] = complemento.getAttribute('UUID')
+                        atributos['FechaTimbrado'] = complemento.getAttribute('FechaTimbrado')
+                        atributos['SelloSAT'] = complemento.getAttribute('SelloSAT')
+
+                        hexlify = codecs.getencoder('hex')
+                        atributos['SelloCFD'] = str(hexlify(str(atributos['SelloCFD']).encode('utf-8'))[0])[0:5000]
+
+                        hexlify = codecs.getencoder('hex')
+                        atributos['SelloSAT'] = str(hexlify(str(atributos['SelloSAT']).encode('utf-8'))[0])[0:5000]
+
+                        print("**** GUARDANDO COMPROBANTE COMPLEMENTOS ***")
+                        cursor = connection.cursor()
+                        consulta = ""
+                        consulta = "INSERT INTO \"InfUsuario\".\"CFDICOMPROBANTECOMPLEMENTO\"( "
+                        consulta = consulta + "\"SELLOCFD\", \"NOCERTIFICADOSAT\", \"RFCPROVCERTIF\", \"UUID\", \"FECHATIMBRADO\", "
+                        consulta = consulta + "\"SELLOSAT\", \"VERSION\", \"ID_COMPROBANTE\" )"
+                        
+                        consulta = consulta + " VALUES( "
+                        consulta = consulta + "'" + atributos['SelloCFD'] + "', '" + atributos['NoCertificadoSAT'] + "', '" + atributos['RfcProvCertif'] + "', '" + atributos['UUID'] + "', '" + atributos['FechaTimbrado'] + "', "
+                        consulta = consulta + "'" + atributos['SelloSAT'] + "', '" + atributos['Version'] + "', '" + str(idcomprobante) + "' "
+                        consulta = consulta + " )"
+                        
+                        #print(consulta)
+                        cursor.execute(consulta)
+                        connection.commit()
+                        cursor.close()
 
     except (Exception, psycopg2.DatabaseError) as error :
         print ("Error mientras se guardaban los datos", error)
 
     finally:
-        return atributos
+        return 1
 
 def run(cmd, echo=True, graceful=True):            
     proc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.STDOUT)            
@@ -317,6 +480,7 @@ def main():
                     #idDescarga = str(row2[0])
                     strArchivo = str(row2[1]) + '.zip'
 
+                    print("**** PREPARANDO XML ***")
                     comando = 'unzip -o ' + str(strArchivo) 
                     args = shlex.split(comando)
                     run(args)
@@ -334,6 +498,7 @@ def main():
                             os.remove(strArchivotxt)
 
                     if stat == 1:
+                        print("**** PROCESO COMPLETADO ***")
                         bError = 0
 
                 except (psycopg2.Error, RuntimeError, TypeError, NameError, OSError, ValueError, Exception) as error :
@@ -342,6 +507,15 @@ def main():
                         print(error)
 
                 finally:
+
+                    cursor = conexion.cursor()
+                    consulta = ""
+                    consulta = "CALL \"BaseSistema\".\"RecargaResultados\"('" + CVE_DESCARGA + "');"
+                    print("**** RECALCULANDO RESULTADOS ***")
+                    cursor.execute(consulta)
+                    conexion.commit()
+                    cursor.close()
+
                     statusCerrada = CerrarConexionPostgresql(conexion)
 
                     print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
