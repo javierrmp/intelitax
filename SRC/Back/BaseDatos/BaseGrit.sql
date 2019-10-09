@@ -5,7 +5,7 @@
 -- Dumped from database version 11.5 (Ubuntu 11.5-1.pgdg19.04+1)
 -- Dumped by pg_dump version 11.5 (Ubuntu 11.5-1.pgdg19.04+1)
 
--- Started on 2019-10-08 09:33:25 CDT
+-- Started on 2019-10-09 09:21:21 CDT
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -20,7 +20,7 @@ SET row_security = off;
 
 DROP DATABASE "BaseGrit";
 --
--- TOC entry 3700 (class 1262 OID 38275)
+-- TOC entry 3719 (class 1262 OID 38275)
 -- Name: BaseGrit; Type: DATABASE; Schema: -; Owner: postgres
 --
 
@@ -91,7 +91,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 
 --
--- TOC entry 3701 (class 0 OID 0)
+-- TOC entry 3720 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
 --
@@ -100,32 +100,7 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
--- TOC entry 388 (class 1255 OID 47018)
--- Name: CargaCfdiComprobante(character, character, character, timestamp without time zone, character, character, character, character, character, double precision, double precision, character, double precision, double precision, character, character, character, character, character, character, character, character, character, character, character, character, double precision, double precision, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
---
-
-CREATE PROCEDURE "BaseSistema"."CargaCfdiComprobante"(versions character, serie character, folio character, fecha timestamp without time zone, sello character, formapago character, nocertificado character, certificado character, condicionesdepago character, subtotal double precision, descuento double precision, moneda character, tipocambio double precision, total double precision, tipodecomprobante character, metodopago character, lugarexpedicion character, confirmacion character, rfcemisor character, nombreemisor character, regimenfiscal character, rfcreceptor character, nombrereceptor character, residenciafisicareceptor character, numregidtribreceptor character, usocfdi character, totalimpuestosretenidos double precision, totalimpuestostrasladados double precision, cve_descarga character)
-    LANGUAGE plpgsql
-    AS $$
-DECLARE IdComprobante int;
-begin
-
-	INSERT INTO "InfUsuario"."CFDICOMPROBANTE"(
-	"VERSION", "SERIE", "FOLIO", "FECHA", "SELLO", "FORMAPAGO", "NOCERTIFICADO", "CERTIFICADO", "CONDICIONESDEPAGO", "SUBTOTAL", "DESCUENTO", "MONEDA", "TIPOCAMBIO", "TOTAL", "TIPODECOMPROBANTE", "METODOPAGO", "LUGAREXPEDICION", "CONFIRMACION", "RFCEMISOR", "NOMBREEMISOR", "REGIMENFISCAL", "RFCRECEPTOR", "NOMBRERECEPTOR", "RESIDENCIAFISICARECEPTOR", "NUMREGIDTRIBRECEPTOR", "USOCFDI", "TOTALIMPUESTOSRETENIDOS", "TOTALIMPUESTOSTRASLADADOS", "CVE_DESCARGA")
-	VALUES (VERSIONS, SERIE, FOLIO, FECHA, SELLO, FORMAPAGO, NOCERTIFICADO, CERTIFICADO, CONDICIONESDEPAGO, SUBTOTAL, DESCUENTO, MONEDA, TIPOCAMBIO, TOTAL, TIPODECOMPROBANTE, METODOPAGO, LUGAREXPEDICION, CONFIRMACION, RFCEMISOR, NOMBREEMISOR, REGIMENFISCAL, RFCRECEPTOR, NOMBRERECEPTOR, RESIDENCIAFISICARECEPTOR, NUMREGIDTRIBRECEPTOR, USOCFDI, TOTALIMPUESTOSRETENIDOS, TOTALIMPUESTOSTRASLADADOS, CVE_DESCARGA);
-	
-	SELECT "ID_COMPROBANTE" INTO IdComprobante FROM "InfUsuario"."CFDICOMPROBANTE" WHERE "CVE_DESCARGA" = CVE_DESCARGA;
-	
-	RAISE NOTICE '%',IdComprobante;
-	
-end;
-$$;
-
-
-ALTER PROCEDURE "BaseSistema"."CargaCfdiComprobante"(versions character, serie character, folio character, fecha timestamp without time zone, sello character, formapago character, nocertificado character, certificado character, condicionesdepago character, subtotal double precision, descuento double precision, moneda character, tipocambio double precision, total double precision, tipodecomprobante character, metodopago character, lugarexpedicion character, confirmacion character, rfcemisor character, nombreemisor character, regimenfiscal character, rfcreceptor character, nombrereceptor character, residenciafisicareceptor character, numregidtribreceptor character, usocfdi character, totalimpuestosretenidos double precision, totalimpuestostrasladados double precision, cve_descarga character) OWNER TO postgres;
-
---
--- TOC entry 387 (class 1255 OID 45459)
+-- TOC entry 391 (class 1255 OID 45459)
 -- Name: CargaCredenciales(character, text, character, character, character, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -173,7 +148,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CargaCredenciales"(idrfc character, paswd text, ruta character, nomllave character, nomcert character, estatus character) OWNER TO postgres;
 
 --
--- TOC entry 336 (class 1255 OID 42034)
+-- TOC entry 340 (class 1255 OID 42034)
 -- Name: CargaINFOMETA(character, character, character, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -233,7 +208,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CargaINFOMETA"(cve_descarga character, file_name character, temporal character, ruta character) OWNER TO postgres;
 
 --
--- TOC entry 335 (class 1255 OID 38284)
+-- TOC entry 339 (class 1255 OID 38284)
 -- Name: CargaXML(); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -255,7 +230,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CargaXML"() OWNER TO postgres;
 
 --
--- TOC entry 389 (class 1255 OID 41874)
+-- TOC entry 392 (class 1255 OID 41874)
 -- Name: CopiaINFO69y69B(character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -317,7 +292,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CopiaINFO69y69B"(cve_descarga character) OWNER TO postgres;
 
 --
--- TOC entry 349 (class 1255 OID 42442)
+-- TOC entry 353 (class 1255 OID 42442)
 -- Name: CopiaINFOMETA(character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -352,7 +327,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CopiaINFOMETA"(cve_descarga character) OWNER TO postgres;
 
 --
--- TOC entry 386 (class 1255 OID 45477)
+-- TOC entry 390 (class 1255 OID 45477)
 -- Name: DescargaCredenciales(character); Type: FUNCTION; Schema: BaseSistema; Owner: postgres
 --
 
@@ -372,6 +347,45 @@ $$;
 
 
 ALTER FUNCTION "BaseSistema"."DescargaCredenciales"(idrfc character) OWNER TO postgres;
+
+--
+-- TOC entry 393 (class 1255 OID 47419)
+-- Name: RecargaResultados(character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE PROCEDURE "BaseSistema"."RecargaResultados"(cve_descarga character)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE HayDatos int;
+begin
+
+	SELECT COUNT(1) INTO HayDatos FROM "InfUsuario"."CFDICOMPROBANTE" WHERE "CVE_DESCARGA" = cve_descarga;
+	
+	RAISE NOTICE 'Hay datos XML (%)',HayDatos;
+	
+	IF HayDatos > 0 THEN
+		REFRESH MATERIALIZED VIEW "InfUsuario"."CFDIVALIDADOS69Y69B" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_APLIC_ANTICIPOS" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DEVOLUCIONES" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_APLIC_ANTICIPOS" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_NC" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_NOTAS_DEBITO" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_PAGOS_CONTADO" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_PAGO_ANTICIPO" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_ANTICIPOS" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_APLIC_ANTICIPOS" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_DEVOLUCIONES" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_APLIC_ANTICIPOS" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_DESCUENTOS_NC" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_NOTAS_DEBITO" WITH DATA;
+		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_VTAS_CONTADO" WITH DATA;
+	END IF;
+	
+end;
+$$;
+
+
+ALTER PROCEDURE "BaseSistema"."RecargaResultados"(cve_descarga character) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -407,7 +421,7 @@ CREATE SEQUENCE "BaseSistema"."CATACCIONES_ID_ACCION_seq"
 ALTER TABLE "BaseSistema"."CATACCIONES_ID_ACCION_seq" OWNER TO postgres;
 
 --
--- TOC entry 3702 (class 0 OID 0)
+-- TOC entry 3721 (class 0 OID 0)
 -- Dependencies: 214
 -- Name: CATACCIONES_ID_ACCION_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
 --
@@ -502,7 +516,7 @@ CREATE SEQUENCE "BaseSistema"."CATSTATUS_ID_STATUS_seq"
 ALTER TABLE "BaseSistema"."CATSTATUS_ID_STATUS_seq" OWNER TO postgres;
 
 --
--- TOC entry 3703 (class 0 OID 0)
+-- TOC entry 3722 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: CATSTATUS_ID_STATUS_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
 --
@@ -772,7 +786,7 @@ CREATE SEQUENCE "BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"
 ALTER TABLE "BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq" OWNER TO postgres;
 
 --
--- TOC entry 3704 (class 0 OID 0)
+-- TOC entry 3723 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: CFGFILEUNLOADS_ID_UNLOAD_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
 --
@@ -2438,6 +2452,21 @@ CREATE MATERIALIZED VIEW "InfUsuario"."CATALOGOPROVEEDORES" AS
 ALTER TABLE "InfUsuario"."CATALOGOPROVEEDORES" OWNER TO postgres;
 
 --
+-- TOC entry 337 (class 1259 OID 47141)
+-- Name: CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE SEQUENCE "InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    MAXVALUE 2147483647
+    CACHE 1;
+
+
+ALTER TABLE "InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq" OWNER TO postgres;
+
+--
 -- TOC entry 297 (class 1259 OID 38649)
 -- Name: CFDICOMPROBANTE_ID_COMPROBANTE_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
@@ -2463,10 +2492,10 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTE" (
     "SERIE" character(25),
     "FOLIO" character(40),
     "FECHA" timestamp(1) without time zone,
-    "SELLO" character(250),
+    "SELLO" text,
     "FORMAPAGO" character(2),
     "NOCERTIFICADO" character(30),
-    "CERTIFICADO" character(1500),
+    "CERTIFICADO" text,
     "CONDICIONESDEPAGO" character(1000),
     "SUBTOTAL" double precision,
     "DESCUENTO" double precision,
@@ -2493,6 +2522,56 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTE" (
 
 
 ALTER TABLE "InfUsuario"."CFDICOMPROBANTE" OWNER TO postgres;
+
+--
+-- TOC entry 338 (class 1259 OID 47143)
+-- Name: CFDICOMPROBANTECOMPLEMENTO; Type: TABLE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" (
+    "ID_COMPLEMENTO" integer DEFAULT nextval('"InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq"'::regclass) NOT NULL,
+    "SELLOCFD" character(1000),
+    "NOCERTIFICADOSAT" character(30),
+    "RFCPROVCERTIF" character(13),
+    "UUID" character(36),
+    "FECHATIMBRADO" timestamp(1) without time zone,
+    "SELLOSAT" character(1000),
+    "ID_COMPROBANTE" bigint,
+    "VERSION" character(5)
+);
+
+
+ALTER TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" OWNER TO postgres;
+
+--
+-- TOC entry 335 (class 1259 OID 47135)
+-- Name: CFDIRETENIDOS_ID_RETENIDO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE SEQUENCE "InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    MAXVALUE 2147483647
+    CACHE 1;
+
+
+ALTER TABLE "InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq" OWNER TO postgres;
+
+--
+-- TOC entry 336 (class 1259 OID 47137)
+-- Name: CFDICOMPROBANTEIMPUESTOSRETENIDOS; Type: TABLE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE TABLE "InfUsuario"."CFDICOMPROBANTEIMPUESTOSRETENIDOS" (
+    "ID_RETENIDOS" integer DEFAULT nextval('"InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq"'::regclass) NOT NULL,
+    "IMPUESTO" character(3),
+    "IMPORTE" double precision,
+    "ID_COMPROBANTE" bigint
+);
+
+
+ALTER TABLE "InfUsuario"."CFDICOMPROBANTEIMPUESTOSRETENIDOS" OWNER TO postgres;
 
 --
 -- TOC entry 299 (class 1259 OID 38658)
@@ -2669,7 +2748,7 @@ CREATE SEQUENCE "InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq"
 ALTER TABLE "InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq" OWNER TO postgres;
 
 --
--- TOC entry 3705 (class 0 OID 0)
+-- TOC entry 3724 (class 0 OID 0)
 -- Dependencies: 308
 -- Name: CFDIIMPUESTOS_ID_IMPUESTO_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
@@ -2694,7 +2773,7 @@ CREATE SEQUENCE "InfUsuario"."CFDIRELACIONADOS_ID_RELACIONADOS_seq"
 ALTER TABLE "InfUsuario"."CFDIRELACIONADOS_ID_RELACIONADOS_seq" OWNER TO postgres;
 
 --
--- TOC entry 3706 (class 0 OID 0)
+-- TOC entry 3725 (class 0 OID 0)
 -- Dependencies: 309
 -- Name: CFDIRELACIONADOS_ID_RELACIONADOS_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
@@ -2719,7 +2798,7 @@ CREATE SEQUENCE "InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq"
 ALTER TABLE "InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq" OWNER TO postgres;
 
 --
--- TOC entry 3707 (class 0 OID 0)
+-- TOC entry 3726 (class 0 OID 0)
 -- Dependencies: 310
 -- Name: CFDIRETENCIONES_ID_RETENCION_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
@@ -2758,7 +2837,7 @@ CREATE SEQUENCE "InfUsuario"."CFDITOTAL_ID_CFDI_seq"
 ALTER TABLE "InfUsuario"."CFDITOTAL_ID_CFDI_seq" OWNER TO postgres;
 
 --
--- TOC entry 3708 (class 0 OID 0)
+-- TOC entry 3727 (class 0 OID 0)
 -- Dependencies: 312
 -- Name: CFDITOTAL_ID_CFDI_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
@@ -3262,7 +3341,7 @@ CREATE TABLE "InfUsuario"."INF32D" (
 ALTER TABLE "InfUsuario"."INF32D" OWNER TO postgres;
 
 --
--- TOC entry 3365 (class 2604 OID 38897)
+-- TOC entry 3378 (class 2604 OID 38897)
 -- Name: CATACCIONES ID_ACCION; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
 --
 
@@ -3270,7 +3349,7 @@ ALTER TABLE ONLY "BaseSistema"."CATACCIONES" ALTER COLUMN "ID_ACCION" SET DEFAUL
 
 
 --
--- TOC entry 3368 (class 2604 OID 38898)
+-- TOC entry 3381 (class 2604 OID 38898)
 -- Name: CATSTATUS ID_STATUS; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
 --
 
@@ -3278,7 +3357,7 @@ ALTER TABLE ONLY "BaseSistema"."CATSTATUS" ALTER COLUMN "ID_STATUS" SET DEFAULT 
 
 
 --
--- TOC entry 3374 (class 2604 OID 38900)
+-- TOC entry 3387 (class 2604 OID 38900)
 -- Name: LOGDESCARGAFILE ID_DESCARGA; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
 --
 
@@ -3286,7 +3365,7 @@ ALTER TABLE ONLY "BaseSistema"."LOGDESCARGAFILE" ALTER COLUMN "ID_DESCARGA" SET 
 
 
 --
--- TOC entry 3429 (class 2604 OID 38902)
+-- TOC entry 3442 (class 2604 OID 38902)
 -- Name: CFDICOMPROBANTERELACIONADOS ID_RELACIONADOS; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3294,7 +3373,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDICOMPROBANTERELACIONADOS" ALTER COLUMN "ID_REL
 
 
 --
--- TOC entry 3431 (class 2604 OID 38903)
+-- TOC entry 3444 (class 2604 OID 38903)
 -- Name: CFDICONCEPTOSIMPUESTOSRETENCIONES ID_RETENCION; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3302,7 +3381,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" ALTER COLUMN "
 
 
 --
--- TOC entry 3432 (class 2604 OID 38904)
+-- TOC entry 3445 (class 2604 OID 38904)
 -- Name: CFDICONCEPTOSIMPUESTOSTRASLADOS ID_IMPUESTO; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3310,7 +3389,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" ALTER COLUMN "ID
 
 
 --
--- TOC entry 3434 (class 2604 OID 38905)
+-- TOC entry 3447 (class 2604 OID 38905)
 -- Name: CFDITOTAL ID_CFDI; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3318,7 +3397,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDITOTAL" ALTER COLUMN "ID_CFDI" SET DEFAULT nex
 
 
 --
--- TOC entry 3578 (class 0 OID 38285)
+-- TOC entry 3593 (class 0 OID 38285)
 -- Dependencies: 213
 -- Data for Name: CATACCIONES; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3332,7 +3411,7 @@ INSERT INTO "BaseSistema"."CATACCIONES" VALUES (6, 'AUTORIZA                 ');
 
 
 --
--- TOC entry 3581 (class 0 OID 38292)
+-- TOC entry 3596 (class 0 OID 38292)
 -- Dependencies: 216
 -- Data for Name: CATPROCESOS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3351,7 +3430,7 @@ INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (11, 'DESCARGA WS                
 
 
 --
--- TOC entry 3583 (class 0 OID 38298)
+-- TOC entry 3598 (class 0 OID 38298)
 -- Dependencies: 218
 -- Data for Name: CATPROCESOSSTATUS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3371,7 +3450,7 @@ INSERT INTO "BaseSistema"."CATPROCESOSSTATUS" VALUES (12, 'FALLIDO             '
 
 
 --
--- TOC entry 3584 (class 0 OID 38302)
+-- TOC entry 3599 (class 0 OID 38302)
 -- Dependencies: 219
 -- Data for Name: CATSTATUS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3412,21 +3491,23 @@ INSERT INTO "BaseSistema"."CATSTATUS" VALUES (33, 9, 12);
 
 
 --
--- TOC entry 3588 (class 0 OID 38311)
+-- TOC entry 3603 (class 0 OID 38311)
 -- Dependencies: 223
 -- Data for Name: CFGCLTES; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
 
 
+
 --
--- TOC entry 3690 (class 0 OID 45434)
+-- TOC entry 3705 (class 0 OID 45434)
 -- Dependencies: 330
 -- Data for Name: CFGCLTESCREDENCIALES; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
 
 
+
 --
--- TOC entry 3589 (class 0 OID 38326)
+-- TOC entry 3604 (class 0 OID 38326)
 -- Dependencies: 224
 -- Data for Name: CFGCLTESREPOSITORIOS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3435,14 +3516,15 @@ INSERT INTO "BaseSistema"."CFGCLTESREPOSITORIOS" VALUES (2, 'InfUsuario     ', '
 
 
 --
--- TOC entry 3591 (class 0 OID 38332)
+-- TOC entry 3606 (class 0 OID 38332)
 -- Dependencies: 226
 -- Data for Name: CFGCLTESRFC; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
 
 
+
 --
--- TOC entry 3593 (class 0 OID 38338)
+-- TOC entry 3608 (class 0 OID 38338)
 -- Dependencies: 228
 -- Data for Name: CFGFILE; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3466,7 +3548,7 @@ INSERT INTO "BaseSistema"."CFGFILE" VALUES (10, '69   ', 'LISTADO 69 - Retorno  
 
 
 --
--- TOC entry 3595 (class 0 OID 38347)
+-- TOC entry 3610 (class 0 OID 38347)
 -- Dependencies: 230
 -- Data for Name: CFGFILECOLUMNS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3505,7 +3587,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3598 (class 0 OID 38356)
+-- TOC entry 3613 (class 0 OID 38356)
 -- Dependencies: 233
 -- Data for Name: INF69; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3513,7 +3595,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3599 (class 0 OID 38359)
+-- TOC entry 3614 (class 0 OID 38359)
 -- Dependencies: 234
 -- Data for Name: INF69B; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3521,7 +3603,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3596 (class 0 OID 38351)
+-- TOC entry 3611 (class 0 OID 38351)
 -- Dependencies: 231
 -- Data for Name: LOGDESCARGAFILE; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3529,7 +3611,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3692 (class 0 OID 45499)
+-- TOC entry 3707 (class 0 OID 45499)
 -- Dependencies: 332
 -- Data for Name: LOGDESCARGAWSAUTH; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3537,7 +3619,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3694 (class 0 OID 45529)
+-- TOC entry 3709 (class 0 OID 45529)
 -- Dependencies: 334
 -- Data for Name: LOGDESCARGAWSPROCESO; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3545,7 +3627,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3605 (class 0 OID 38401)
+-- TOC entry 3620 (class 0 OID 38401)
 -- Dependencies: 243
 -- Data for Name: INF69B_y2019m09; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3553,7 +3635,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3606 (class 0 OID 38408)
+-- TOC entry 3621 (class 0 OID 38408)
 -- Dependencies: 244
 -- Data for Name: INF69B_y2019m10; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3561,7 +3643,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3607 (class 0 OID 38415)
+-- TOC entry 3622 (class 0 OID 38415)
 -- Dependencies: 245
 -- Data for Name: INF69B_y2019m11; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3569,7 +3651,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3608 (class 0 OID 38422)
+-- TOC entry 3623 (class 0 OID 38422)
 -- Dependencies: 246
 -- Data for Name: INF69B_y2019m12; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3577,7 +3659,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3609 (class 0 OID 38429)
+-- TOC entry 3624 (class 0 OID 38429)
 -- Dependencies: 247
 -- Data for Name: INF69B_y2020m01; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3585,7 +3667,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3610 (class 0 OID 38436)
+-- TOC entry 3625 (class 0 OID 38436)
 -- Dependencies: 248
 -- Data for Name: INF69B_y2020m02; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3593,7 +3675,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3611 (class 0 OID 38443)
+-- TOC entry 3626 (class 0 OID 38443)
 -- Dependencies: 249
 -- Data for Name: INF69B_y2020m03; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3601,7 +3683,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3612 (class 0 OID 38450)
+-- TOC entry 3627 (class 0 OID 38450)
 -- Dependencies: 250
 -- Data for Name: INF69B_y2020m04; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3609,7 +3691,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3613 (class 0 OID 38457)
+-- TOC entry 3628 (class 0 OID 38457)
 -- Dependencies: 251
 -- Data for Name: INF69B_y2020m05; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3617,7 +3699,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3614 (class 0 OID 38464)
+-- TOC entry 3629 (class 0 OID 38464)
 -- Dependencies: 252
 -- Data for Name: INF69B_y2020m06; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3625,7 +3707,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3615 (class 0 OID 38471)
+-- TOC entry 3630 (class 0 OID 38471)
 -- Dependencies: 253
 -- Data for Name: INF69B_y2020m07; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3633,7 +3715,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3616 (class 0 OID 38478)
+-- TOC entry 3631 (class 0 OID 38478)
 -- Dependencies: 254
 -- Data for Name: INF69B_y2020m08; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3641,7 +3723,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3617 (class 0 OID 38485)
+-- TOC entry 3632 (class 0 OID 38485)
 -- Dependencies: 255
 -- Data for Name: INF69_y2019m09; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3649,7 +3731,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3618 (class 0 OID 38489)
+-- TOC entry 3633 (class 0 OID 38489)
 -- Dependencies: 256
 -- Data for Name: INF69_y2019m10; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3657,7 +3739,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3619 (class 0 OID 38493)
+-- TOC entry 3634 (class 0 OID 38493)
 -- Dependencies: 257
 -- Data for Name: INF69_y2019m11; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3665,7 +3747,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3620 (class 0 OID 38497)
+-- TOC entry 3635 (class 0 OID 38497)
 -- Dependencies: 258
 -- Data for Name: INF69_y2019m12; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3673,7 +3755,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3621 (class 0 OID 38501)
+-- TOC entry 3636 (class 0 OID 38501)
 -- Dependencies: 259
 -- Data for Name: INF69_y2020m01; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3681,7 +3763,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3622 (class 0 OID 38505)
+-- TOC entry 3637 (class 0 OID 38505)
 -- Dependencies: 260
 -- Data for Name: INF69_y2020m02; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3689,7 +3771,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3623 (class 0 OID 38509)
+-- TOC entry 3638 (class 0 OID 38509)
 -- Dependencies: 261
 -- Data for Name: INF69_y2020m03; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3697,7 +3779,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3624 (class 0 OID 38513)
+-- TOC entry 3639 (class 0 OID 38513)
 -- Dependencies: 262
 -- Data for Name: INF69_y2020m04; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3705,7 +3787,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3625 (class 0 OID 38517)
+-- TOC entry 3640 (class 0 OID 38517)
 -- Dependencies: 263
 -- Data for Name: INF69_y2020m05; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3713,7 +3795,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3626 (class 0 OID 38521)
+-- TOC entry 3641 (class 0 OID 38521)
 -- Dependencies: 264
 -- Data for Name: INF69_y2020m06; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3721,7 +3803,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3627 (class 0 OID 38525)
+-- TOC entry 3642 (class 0 OID 38525)
 -- Dependencies: 265
 -- Data for Name: INF69_y2020m07; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3729,7 +3811,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3628 (class 0 OID 38529)
+-- TOC entry 3643 (class 0 OID 38529)
 -- Dependencies: 266
 -- Data for Name: INF69_y2020m08; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
@@ -3737,7 +3819,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3630 (class 0 OID 38539)
+-- TOC entry 3645 (class 0 OID 38539)
 -- Dependencies: 269
 -- Data for Name: INF32D_y2019m09; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3745,7 +3827,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3631 (class 0 OID 38543)
+-- TOC entry 3646 (class 0 OID 38543)
 -- Dependencies: 270
 -- Data for Name: INF32D_y2019m10; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3753,7 +3835,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3632 (class 0 OID 38547)
+-- TOC entry 3647 (class 0 OID 38547)
 -- Dependencies: 271
 -- Data for Name: INF32D_y2019m11; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3761,7 +3843,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3633 (class 0 OID 38551)
+-- TOC entry 3648 (class 0 OID 38551)
 -- Dependencies: 272
 -- Data for Name: INF32D_y2019m12; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3769,7 +3851,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3634 (class 0 OID 38555)
+-- TOC entry 3649 (class 0 OID 38555)
 -- Dependencies: 273
 -- Data for Name: INF32D_y2020m01; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3777,7 +3859,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3635 (class 0 OID 38559)
+-- TOC entry 3650 (class 0 OID 38559)
 -- Dependencies: 274
 -- Data for Name: INF32D_y2020m02; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3785,7 +3867,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3636 (class 0 OID 38563)
+-- TOC entry 3651 (class 0 OID 38563)
 -- Dependencies: 275
 -- Data for Name: INF32D_y2020m03; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3793,7 +3875,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3637 (class 0 OID 38567)
+-- TOC entry 3652 (class 0 OID 38567)
 -- Dependencies: 276
 -- Data for Name: INF32D_y2020m04; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3801,7 +3883,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3638 (class 0 OID 38571)
+-- TOC entry 3653 (class 0 OID 38571)
 -- Dependencies: 277
 -- Data for Name: INF32D_y2020m05; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3809,7 +3891,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3639 (class 0 OID 38575)
+-- TOC entry 3654 (class 0 OID 38575)
 -- Dependencies: 278
 -- Data for Name: INF32D_y2020m06; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3817,7 +3899,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3640 (class 0 OID 38579)
+-- TOC entry 3655 (class 0 OID 38579)
 -- Dependencies: 279
 -- Data for Name: INF32D_y2020m07; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3825,7 +3907,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3641 (class 0 OID 38583)
+-- TOC entry 3656 (class 0 OID 38583)
 -- Dependencies: 280
 -- Data for Name: INF32D_y2020m08; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3833,7 +3915,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3643 (class 0 OID 38593)
+-- TOC entry 3658 (class 0 OID 38593)
 -- Dependencies: 283
 -- Data for Name: INFMETA_y2019m09; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3841,7 +3923,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3644 (class 0 OID 38597)
+-- TOC entry 3659 (class 0 OID 38597)
 -- Dependencies: 284
 -- Data for Name: INFMETA_y2019m10; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3849,7 +3931,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3645 (class 0 OID 38601)
+-- TOC entry 3660 (class 0 OID 38601)
 -- Dependencies: 285
 -- Data for Name: INFMETA_y2019m11; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3857,7 +3939,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3646 (class 0 OID 38605)
+-- TOC entry 3661 (class 0 OID 38605)
 -- Dependencies: 286
 -- Data for Name: INFMETA_y2019m12; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3865,7 +3947,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3647 (class 0 OID 38609)
+-- TOC entry 3662 (class 0 OID 38609)
 -- Dependencies: 287
 -- Data for Name: INFMETA_y2020m01; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3873,7 +3955,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3648 (class 0 OID 38613)
+-- TOC entry 3663 (class 0 OID 38613)
 -- Dependencies: 288
 -- Data for Name: INFMETA_y2020m02; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3881,7 +3963,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3649 (class 0 OID 38617)
+-- TOC entry 3664 (class 0 OID 38617)
 -- Dependencies: 289
 -- Data for Name: INFMETA_y2020m03; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3889,7 +3971,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3650 (class 0 OID 38621)
+-- TOC entry 3665 (class 0 OID 38621)
 -- Dependencies: 290
 -- Data for Name: INFMETA_y2020m04; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3897,7 +3979,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3651 (class 0 OID 38625)
+-- TOC entry 3666 (class 0 OID 38625)
 -- Dependencies: 291
 -- Data for Name: INFMETA_y2020m05; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3905,7 +3987,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3652 (class 0 OID 38629)
+-- TOC entry 3667 (class 0 OID 38629)
 -- Dependencies: 292
 -- Data for Name: INFMETA_y2020m06; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3913,7 +3995,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3653 (class 0 OID 38633)
+-- TOC entry 3668 (class 0 OID 38633)
 -- Dependencies: 293
 -- Data for Name: INFMETA_y2020m07; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3921,7 +4003,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3654 (class 0 OID 38637)
+-- TOC entry 3669 (class 0 OID 38637)
 -- Dependencies: 294
 -- Data for Name: INFMETA_y2020m08; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
@@ -3929,7 +4011,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3658 (class 0 OID 38651)
+-- TOC entry 3673 (class 0 OID 38651)
 -- Dependencies: 298
 -- Data for Name: CFDICOMPROBANTE; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3937,7 +4019,23 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3660 (class 0 OID 38660)
+-- TOC entry 3713 (class 0 OID 47143)
+-- Dependencies: 338
+-- Data for Name: CFDICOMPROBANTECOMPLEMENTO; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 3711 (class 0 OID 47137)
+-- Dependencies: 336
+-- Data for Name: CFDICOMPROBANTEIMPUESTOSRETENIDOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 3675 (class 0 OID 38660)
 -- Dependencies: 300
 -- Data for Name: CFDICOMPROBANTEIMPUESTOSTRASLADOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3945,7 +4043,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3661 (class 0 OID 38664)
+-- TOC entry 3676 (class 0 OID 38664)
 -- Dependencies: 301
 -- Data for Name: CFDICOMPROBANTERELACIONADOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3953,7 +4051,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3663 (class 0 OID 38669)
+-- TOC entry 3678 (class 0 OID 38669)
 -- Dependencies: 303
 -- Data for Name: CFDICONCEPTOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3961,7 +4059,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3664 (class 0 OID 38676)
+-- TOC entry 3679 (class 0 OID 38676)
 -- Dependencies: 304
 -- Data for Name: CFDICONCEPTOSIMPUESTOSRETENCIONES; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3969,7 +4067,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3665 (class 0 OID 38679)
+-- TOC entry 3680 (class 0 OID 38679)
 -- Dependencies: 305
 -- Data for Name: CFDICONCEPTOSIMPUESTOSTRASLADOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3977,7 +4075,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3667 (class 0 OID 38684)
+-- TOC entry 3682 (class 0 OID 38684)
 -- Dependencies: 307
 -- Data for Name: CFDICONCEPTOSPARTES; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3985,7 +4083,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3671 (class 0 OID 38697)
+-- TOC entry 3686 (class 0 OID 38697)
 -- Dependencies: 311
 -- Data for Name: CFDITOTAL; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -3993,7 +4091,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3688 (class 0 OID 38780)
+-- TOC entry 3703 (class 0 OID 38780)
 -- Dependencies: 328
 -- Data for Name: INF32D; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -4001,7 +4099,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3655 (class 0 OID 38641)
+-- TOC entry 3670 (class 0 OID 38641)
 -- Dependencies: 295
 -- Data for Name: INFMETA; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
@@ -4009,7 +4107,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3709 (class 0 OID 0)
+-- TOC entry 3728 (class 0 OID 0)
 -- Dependencies: 214
 -- Name: CATACCIONES_ID_ACCION_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4018,7 +4116,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CATACCIONES_ID_ACCION_seq"', 1, true);
 
 
 --
--- TOC entry 3710 (class 0 OID 0)
+-- TOC entry 3729 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: CATPROCESOSSTATUS_ID_STATUS_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4027,7 +4125,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CATPROCESOSSTATUS_ID_STATUS_seq"', 1, f
 
 
 --
--- TOC entry 3711 (class 0 OID 0)
+-- TOC entry 3730 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: CATPROCESOS_ID_PROCESO_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4036,7 +4134,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CATPROCESOS_ID_PROCESO_seq"', 1, false)
 
 
 --
--- TOC entry 3712 (class 0 OID 0)
+-- TOC entry 3731 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: CATSTATUS_ID_STATUS_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4045,7 +4143,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CATSTATUS_ID_STATUS_seq"', 1, true);
 
 
 --
--- TOC entry 3713 (class 0 OID 0)
+-- TOC entry 3732 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: CFGALMACEN_ID_ALMACEN_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4054,7 +4152,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGALMACEN_ID_ALMACEN_seq"', 1, false);
 
 
 --
--- TOC entry 3714 (class 0 OID 0)
+-- TOC entry 3733 (class 0 OID 0)
 -- Dependencies: 329
 -- Name: CFGCLTESCREDENCIALES_ID_CRED_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4063,7 +4161,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGCLTESCREDENCIALES_ID_CRED_seq"', 1, 
 
 
 --
--- TOC entry 3715 (class 0 OID 0)
+-- TOC entry 3734 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: CFGFILECOLUMNS_ID_COLUMN_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4072,16 +4170,16 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGFILECOLUMNS_ID_COLUMN_seq"', 1, fals
 
 
 --
--- TOC entry 3716 (class 0 OID 0)
+-- TOC entry 3735 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: CFGFILEUNLOADS_ID_UNLOAD_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"', 195, true);
+SELECT pg_catalog.setval('"BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"', 207, true);
 
 
 --
--- TOC entry 3717 (class 0 OID 0)
+-- TOC entry 3736 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: CFGFILE_ID_FILE_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4090,7 +4188,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGFILE_ID_FILE_seq"', 1, false);
 
 
 --
--- TOC entry 3718 (class 0 OID 0)
+-- TOC entry 3737 (class 0 OID 0)
 -- Dependencies: 222
 -- Name: CLTES_ID_CLTE_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4099,25 +4197,25 @@ SELECT pg_catalog.setval('"BaseSistema"."CLTES_ID_CLTE_seq"', 1, false);
 
 
 --
--- TOC entry 3719 (class 0 OID 0)
+-- TOC entry 3738 (class 0 OID 0)
 -- Dependencies: 331
 -- Name: LOGDESCARGAWSCABECERA_ID_DESCARGA_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSCABECERA_ID_DESCARGA_seq"', 1, true);
+SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSCABECERA_ID_DESCARGA_seq"', 3, true);
 
 
 --
--- TOC entry 3720 (class 0 OID 0)
+-- TOC entry 3739 (class 0 OID 0)
 -- Dependencies: 333
 -- Name: LOGDESCARGAWSPROCESO_ID_DESCARGA_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSPROCESO_ID_DESCARGA_seq"', 1, true);
+SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSPROCESO_ID_DESCARGA_seq"', 7, true);
 
 
 --
--- TOC entry 3721 (class 0 OID 0)
+-- TOC entry 3740 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: RFCS_ID_RFC_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4126,7 +4224,7 @@ SELECT pg_catalog.setval('"BaseSistema"."RFCS_ID_RFC_seq"', 1, false);
 
 
 --
--- TOC entry 3722 (class 0 OID 0)
+-- TOC entry 3741 (class 0 OID 0)
 -- Dependencies: 238
 -- Name: USRSIST_ID_USR_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4135,25 +4233,25 @@ SELECT pg_catalog.setval('"BaseSistema"."USRSIST_ID_USR_seq"', 1, false);
 
 
 --
--- TOC entry 3723 (class 0 OID 0)
+-- TOC entry 3742 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: INF69B_ID_INF_seq; Type: SEQUENCE SET; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69B_ID_INF_seq"', 1, true);
+SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69B_ID_INF_seq"', 10602, true);
 
 
 --
--- TOC entry 3724 (class 0 OID 0)
+-- TOC entry 3743 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: INF69_ID_INF_seq; Type: SEQUENCE SET; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69_ID_INF_seq"', 1, true);
+SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69_ID_INF_seq"', 468728, true);
 
 
 --
--- TOC entry 3725 (class 0 OID 0)
+-- TOC entry 3744 (class 0 OID 0)
 -- Dependencies: 267
 -- Name: INF32D_ID_INF_seq; Type: SEQUENCE SET; Schema: InfHistorica; Owner: postgres
 --
@@ -4162,34 +4260,43 @@ SELECT pg_catalog.setval('"InfHistorica"."INF32D_ID_INF_seq"', 1, false);
 
 
 --
--- TOC entry 3726 (class 0 OID 0)
+-- TOC entry 3745 (class 0 OID 0)
 -- Dependencies: 281
 -- Name: INFMETA_ID_INF_seq; Type: SEQUENCE SET; Schema: InfHistorica; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfHistorica"."INFMETA_ID_INF_seq"', 1, true);
+SELECT pg_catalog.setval('"InfHistorica"."INFMETA_ID_INF_seq"', 2, true);
 
 
 --
--- TOC entry 3727 (class 0 OID 0)
+-- TOC entry 3746 (class 0 OID 0)
+-- Dependencies: 337
+-- Name: CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq"', 3, true);
+
+
+--
+-- TOC entry 3747 (class 0 OID 0)
 -- Dependencies: 297
 -- Name: CFDICOMPROBANTE_ID_COMPROBANTE_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPROBANTE_ID_COMPROBANTE_seq"', 1, false);
+SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPROBANTE_ID_COMPROBANTE_seq"', 13, true);
 
 
 --
--- TOC entry 3728 (class 0 OID 0)
+-- TOC entry 3748 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: CFDICONCEPTOS_ID_CONCEPTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfUsuario"."CFDICONCEPTOS_ID_CONCEPTO_seq"', 1, false);
+SELECT pg_catalog.setval('"InfUsuario"."CFDICONCEPTOS_ID_CONCEPTO_seq"', 6, true);
 
 
 --
--- TOC entry 3729 (class 0 OID 0)
+-- TOC entry 3749 (class 0 OID 0)
 -- Dependencies: 308
 -- Name: CFDIIMPUESTOS_ID_IMPUESTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
@@ -4198,7 +4305,7 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq"', 1, fals
 
 
 --
--- TOC entry 3730 (class 0 OID 0)
+-- TOC entry 3750 (class 0 OID 0)
 -- Dependencies: 306
 -- Name: CFDIPARTES_ID_PARTE_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
@@ -4207,7 +4314,7 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDIPARTES_ID_PARTE_seq"', 1, false);
 
 
 --
--- TOC entry 3731 (class 0 OID 0)
+-- TOC entry 3751 (class 0 OID 0)
 -- Dependencies: 309
 -- Name: CFDIRELACIONADOS_ID_RELACIONADOS_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
@@ -4216,16 +4323,25 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDIRELACIONADOS_ID_RELACIONADOS_seq"', 
 
 
 --
--- TOC entry 3732 (class 0 OID 0)
+-- TOC entry 3752 (class 0 OID 0)
 -- Dependencies: 310
 -- Name: CFDIRETENCIONES_ID_RETENCION_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq"', 1, false);
+SELECT pg_catalog.setval('"InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq"', 5, true);
 
 
 --
--- TOC entry 3733 (class 0 OID 0)
+-- TOC entry 3753 (class 0 OID 0)
+-- Dependencies: 335
+-- Name: CFDIRETENIDOS_ID_RETENIDO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq"', 5, true);
+
+
+--
+-- TOC entry 3754 (class 0 OID 0)
 -- Dependencies: 312
 -- Name: CFDITOTAL_ID_CFDI_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
@@ -4234,7 +4350,7 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDITOTAL_ID_CFDI_seq"', 1, false);
 
 
 --
--- TOC entry 3734 (class 0 OID 0)
+-- TOC entry 3755 (class 0 OID 0)
 -- Dependencies: 299
 -- Name: CFDITRASLADOS_ID_TRASLADO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
@@ -4242,7 +4358,7 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDITOTAL_ID_CFDI_seq"', 1, false);
 SELECT pg_catalog.setval('"InfUsuario"."CFDITRASLADOS_ID_TRASLADO_seq"', 1, false);
 
 
--- Completed on 2019-10-08 09:33:26 CDT
+-- Completed on 2019-10-09 09:21:21 CDT
 
 --
 -- PostgreSQL database dump complete
