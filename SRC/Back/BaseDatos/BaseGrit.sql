@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.5 (Ubuntu 11.5-1.pgdg19.04+1)
--- Dumped by pg_dump version 11.5 (Ubuntu 11.5-1.pgdg19.04+1)
+-- Dumped from database version 11.5 (Ubuntu 11.5-3.pgdg19.04+1)
+-- Dumped by pg_dump version 11.5 (Ubuntu 11.5-3.pgdg19.04+1)
 
--- Started on 2019-10-09 09:21:21 CDT
+-- Started on 2019-10-21 10:18:14 CDT
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -20,7 +20,7 @@ SET row_security = off;
 
 DROP DATABASE "BaseGrit";
 --
--- TOC entry 3719 (class 1262 OID 38275)
+-- TOC entry 3708 (class 1262 OID 38275)
 -- Name: BaseGrit; Type: DATABASE; Schema: -; Owner: postgres
 --
 
@@ -91,13 +91,118 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 
 --
--- TOC entry 3720 (class 0 OID 0)
+-- TOC entry 3709 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
 --
 
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
+
+--
+-- TOC entry 395 (class 1255 OID 57165)
+-- Name: AltaAsociado(character, character, bigint, bigint); Type: FUNCTION; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE FUNCTION "BaseSistema"."AltaAsociado"(razon_soc character DEFAULT ''::bpchar, rfc character DEFAULT ''::bpchar, idclte bigint DEFAULT 0, idusuario bigint DEFAULT 0) RETURNS TABLE(status character varying)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE HayDatos int;
+begin
+	IF rfc = '' THEN
+		RETURN QUERY SELECT 'DIGITE UN RFC'::varchar AS "STATUS";
+	ELSE
+		IF LENGTH(rfc) <> 13 THEN
+			RETURN QUERY SELECT 'DIGITE UN RFC VALIDO'::varchar AS "STATUS";
+		ELSE
+			SELECT COUNT(1) INTO HayDatos FROM "BaseSistema"."CFGCLTESRFC"
+			WHERE "RFC" = rfc AND "STATUS" = 5 AND "ID_CLTE" = idclte;
+
+			IF HayDatos > 0 THEN
+				RETURN QUERY SELECT 'YA EXISTE EL RFC'::varchar AS "STATUS";
+			ELSE
+				INSERT INTO "BaseSistema"."CFGCLTESRFC"
+					("RFC", "RAZON_SOC", "ID_CLTE", "FH_ALTA", "ID_USR_ALTA", "STATUS")
+				VALUES (rfc, razon_soc, idclte, NOW(), idusuario, 5);
+
+				SELECT COUNT(1) INTO HayDatos
+				FROM "BaseSistema"."CFGCLTESRFC"
+				WHERE "RFC" = rfc::varchar AND
+					"RAZON_SOC" = razon_soc::varchar AND
+					"STATUS" = 5;
+					
+				IF HayDatos > 0 THEN
+					RETURN QUERY SELECT "ID_RFC"::varchar AS "STATUS"
+					FROM "BaseSistema"."CFGCLTESRFC"
+					WHERE "RFC" = rfc::varchar AND
+						"RAZON_SOC" = razon_soc::varchar AND
+						"STATUS" = 5;
+				ELSE
+					RETURN QUERY SELECT 'ERROR EN LA ALTA DEL ASOCIADO'::varchar AS "STATUS";
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+end;
+$$;
+
+
+ALTER FUNCTION "BaseSistema"."AltaAsociado"(razon_soc character, rfc character, idclte bigint, idusuario bigint) OWNER TO postgres;
+
+--
+-- TOC entry 393 (class 1255 OID 57164)
+-- Name: AltaCliente(character, character, character, character, character, character, character, character, bigint); Type: FUNCTION; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE FUNCTION "BaseSistema"."AltaCliente"(nombre character DEFAULT ''::bpchar, rfc character DEFAULT ''::bpchar, pais character DEFAULT ''::bpchar, estado character DEFAULT ''::bpchar, ciudad character DEFAULT ''::bpchar, mpio_del character DEFAULT ''::bpchar, colonia character DEFAULT ''::bpchar, cp character DEFAULT ''::bpchar, idusuario bigint DEFAULT 0) RETURNS TABLE(status character varying)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE HayDatos int;
+begin
+	IF rfc = '' THEN
+		RETURN QUERY SELECT 'DIGITE UN RFC'::varchar AS "STATUS";
+	ELSE
+		IF LENGTH(rfc) < 12 THEN
+			RETURN QUERY SELECT 'DIGITE UN RFC VALIDO'::varchar AS "STATUS";
+		ELSE
+			IF LENGTH(rfc) > 13 THEN
+				RETURN QUERY SELECT 'DIGITE UN RFC VALIDO'::varchar AS "STATUS";
+			ELSE
+				SELECT COUNT(1) INTO HayDatos FROM "BaseSistema"."CFGCLTES"
+				WHERE "RFC" = rfc;
+
+				IF HayDatos > 0 THEN
+					RETURN QUERY SELECT 'YA EXISTE EL RFC'::varchar AS "STATUS";
+				ELSE
+					INSERT INTO "BaseSistema"."CFGCLTES"
+						("NAME_CLTE", "RFC", "PAIS", "ESTADO", "CIUDAD", "MPIO_DEL", 
+						 "COLONIA", "CP", "ID_REPOSITORIO", "FH_ALTA",  
+						 "ID_USR_ALTA", "STATUS")
+					VALUES (nombre, rfc, pais, estado, ciudad, mpio_del, 
+							colonia, cp, 2, now(), idusuario, 3);
+
+					SELECT COUNT(1) INTO HayDatos
+					FROM "BaseSistema"."CFGCLTES"
+					WHERE "RFC" = rfc::varchar and
+						"STATUS" = 3;
+
+					IF HayDatos > 0 THEN
+						RETURN QUERY SELECT "ID_CLTE"::varchar AS "STATUS"
+						FROM "BaseSistema"."CFGCLTES"
+						WHERE "RFC" = rfc::varchar and
+							"STATUS" = 3;
+					ELSE
+						RETURN QUERY SELECT 'ERROR EN LA ALTA DEL CLIENTE'::varchar AS "STATUS";
+					END IF;
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+end;
+$$;
+
+
+ALTER FUNCTION "BaseSistema"."AltaCliente"(nombre character, rfc character, pais character, estado character, ciudad character, mpio_del character, colonia character, cp character, idusuario bigint) OWNER TO postgres;
 
 --
 -- TOC entry 391 (class 1255 OID 45459)
@@ -148,7 +253,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CargaCredenciales"(idrfc character, paswd text, ruta character, nomllave character, nomcert character, estatus character) OWNER TO postgres;
 
 --
--- TOC entry 340 (class 1255 OID 42034)
+-- TOC entry 337 (class 1255 OID 42034)
 -- Name: CargaINFOMETA(character, character, character, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -208,7 +313,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CargaINFOMETA"(cve_descarga character, file_name character, temporal character, ruta character) OWNER TO postgres;
 
 --
--- TOC entry 339 (class 1255 OID 38284)
+-- TOC entry 336 (class 1255 OID 38284)
 -- Name: CargaXML(); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -292,7 +397,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CopiaINFO69y69B"(cve_descarga character) OWNER TO postgres;
 
 --
--- TOC entry 353 (class 1255 OID 42442)
+-- TOC entry 350 (class 1255 OID 42442)
 -- Name: CopiaINFOMETA(character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -327,7 +432,7 @@ $$;
 ALTER PROCEDURE "BaseSistema"."CopiaINFOMETA"(cve_descarga character) OWNER TO postgres;
 
 --
--- TOC entry 390 (class 1255 OID 45477)
+-- TOC entry 389 (class 1255 OID 45477)
 -- Name: DescargaCredenciales(character); Type: FUNCTION; Schema: BaseSistema; Owner: postgres
 --
 
@@ -349,7 +454,214 @@ $$;
 ALTER FUNCTION "BaseSistema"."DescargaCredenciales"(idrfc character) OWNER TO postgres;
 
 --
--- TOC entry 393 (class 1255 OID 47419)
+-- TOC entry 405 (class 1255 OID 60099)
+-- Name: FinalizaReporte(character, character, bigint); Type: FUNCTION; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE FUNCTION "BaseSistema"."FinalizaReporte"(cve_consulta character DEFAULT ''::bpchar, periodo character DEFAULT ''::bpchar, idusuario bigint DEFAULT 0) RETURNS TABLE(status character varying)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE HayDatos int;
+begin
+	IF cve_consulta = '' THEN
+		RETURN QUERY SELECT 'DIGITE UN CLAVE DE CONSULTA'::varchar AS "STATUS";
+	ELSE
+		IF periodo = '' THEN
+			RETURN QUERY SELECT 'DIGITE EL PERIODO'::varchar AS "STATUS";
+		ELSE
+			IF idusuario = 0 THEN
+				RETURN QUERY SELECT 'DIGITE EL ID DE USUARIO QUE SOLICITA EL REPORTE'::varchar AS "STATUS";
+			ELSE
+				
+				UPDATE "BaseSistema"."SOLCONSULPER"
+				SET "STATUS"=41
+				WHERE "CVE_CONSULTA" = cve_consulta AND
+					"PERIODO" = periodo AND
+					"ID_USR_ALTA" = idusuario;
+
+				SELECT "ID_CONSULTA"
+				INTO HayDatos
+				FROM "BaseSistema"."SOLCONSULPER"
+				WHERE "CVE_CONSULTA" = cve_consulta AND
+					"PERIODO" = periodo AND
+					"ID_USR_ALTA" = idusuario AND
+					"STATUS"=41;
+				
+				IF HayDatos > 0 THEN
+					RETURN QUERY SELECT 'EXITO'::varchar AS "STATUS";
+				ELSE
+					RETURN QUERY SELECT 'ERROR'::varchar AS "STATUS";
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+end;
+$$;
+
+
+ALTER FUNCTION "BaseSistema"."FinalizaReporte"(cve_consulta character, periodo character, idusuario bigint) OWNER TO postgres;
+
+--
+-- TOC entry 390 (class 1255 OID 60046)
+-- Name: MarcaPagosInValidosXdocu(); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE PROCEDURE "BaseSistema"."MarcaPagosInValidosXdocu"()
+    LANGUAGE plpgsql
+    AS $$
+begin
+	UPDATE "BaseSistema"."LOGCARGAXML" T1
+	SET "USAPAGO" = 0, "MSGERROR" = 'EL DOCUMENTO RELACIONADO NO SE ENCUENTRA'
+	FROM (
+		SELECT 
+			t9."CVE_DESCARGA"
+		FROM "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" t10
+		INNER JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" t11 ON 
+			t11."ID_PAGO" = t10."ID_PAGO"
+		LEFT JOIN "InfUsuario"."CFDICOMPROBANTE" t9 ON
+			t9."ID_COMPROBANTE" = t10."ID_COMPROBANTE"
+		LEFT JOIN "BaseSistema"."LOGCARGAXML" t8 ON
+			t8."ID_CARGAXML"::character varying = t9."CVE_DESCARGA" AND
+			REPLACE(t8."ARCHIVOXML",'.xml', '') = t11."IDDOCUMENTO" AND
+			t8."STATUS" = 36 AND t8."STATUSPERIODO" = 38 AND t8."USAPAGO" = 1
+		) t2
+	WHERE T1."ID_CARGAXML"::character varying = t2."CVE_DESCARGA";
+end;
+$$;
+
+
+ALTER PROCEDURE "BaseSistema"."MarcaPagosInValidosXdocu"() OWNER TO postgres;
+
+--
+-- TOC entry 400 (class 1255 OID 60047)
+-- Name: MarcaPagosInValidosXfechas(bigint); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE PROCEDURE "BaseSistema"."MarcaPagosInValidosXfechas"(idusrsolicita bigint)
+    LANGUAGE plpgsql
+    AS $$
+begin
+	UPDATE "BaseSistema"."LOGCARGAXML" T1
+	SET "USAPAGO" = t2."USA", "MSGERROR" = t2."MSG"
+	FROM (
+		SELECT 
+			t1."CVE_DESCARGA",
+			CASE
+				WHEN t10."FECHAPAGO" BETWEEN pe."FECHAINICIAL" AND pe."FECHAFINAL" THEN 1
+				ELSE 0
+			END AS "USA",
+			CASE
+				WHEN t10."FECHAPAGO" BETWEEN pe."FECHAINICIAL" AND pe."FECHAFINAL" THEN NULL
+				ELSE 'LA FECHA DEL DOCUMENTO RELACIONADO NO ES DEL PERIODO CONSULTADO'
+			END AS "MSG"
+		FROM "InfUsuario"."CFDICOMPROBANTE" t1
+		 JOIN "BaseSistema"."LOGCARGAXML" th ON th."ID_CARGAXML"::character varying::bpchar = 
+			t1."CVE_DESCARGA" AND th."STATUS" = 36 AND th."STATUSPERIODO" = 38 AND th."USAPAGO" = 1
+		 JOIN "BaseSistema"."SOLCONSULPER" s ON s."PERIODO" = th."PERIODO" AND s."STATUS" = 40
+		 LEFT JOIN "BaseSistema"."CFGPERIODOS"pe ON s."PERIODO" = pe."PERIODO"
+		 JOIN "BaseSistema"."LOGDESCARGAWSPROCESO" pr ON pr."CVE_DESCARGA" = th."CVE_DESCARGA" AND pr."STATUS" = 31
+		 JOIN "BaseSistema"."CFGCLTESRFC" t3 ON t3."ID_RFC" = pr."ID_RFC" AND t3."STATUS" = 5
+		 JOIN "BaseSistema"."CFGCLTES" t4 ON t4."ID_CLTE" = t3."ID_CLTE" AND t4."STATUS" = 3
+		 JOIN "InfUsuario"."CATALOGOPROVEEDORES" t5 ON t5."RFC_EMISOR" = t1."RFCEMISOR" AND t5."STATUS" = 1
+		 LEFT JOIN "InfUsuario"."CFDICONCEPTOS" t6 ON t6."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+		 LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" t7 ON t7."ID_CONCEPTO" = t6."ID_CONCEPTO"
+		 LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" t8 ON t8."ID_CONCEPTO" = t6."ID_CONCEPTO"
+		 LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" t9 ON t9."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+		 LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" t10 ON t10."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+		 LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" t11 ON t11."ID_PAGO" = t10."ID_PAGO"
+		 LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" t14 ON t14."ID_COMPROBANTE" = t14."ID_COMPROBANTE"
+		WHERE s."ID_USR_ALTA" = idusrsolicita
+			AND t1."TIPODECOMPROBANTE" = 'P' AND
+			CASE
+				WHEN t10."FECHAPAGO" BETWEEN pe."FECHAINICIAL" AND pe."FECHAFINAL" THEN 1
+				ELSE 0
+			END = 0
+		) t2
+	WHERE T1."ID_CARGAXML"::character varying = t2."CVE_DESCARGA";
+end;
+$$;
+
+
+ALTER PROCEDURE "BaseSistema"."MarcaPagosInValidosXfechas"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 396 (class 1255 OID 57230)
+-- Name: MarcaPagosValidos(character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE PROCEDURE "BaseSistema"."MarcaPagosValidos"(cve_descarga character)
+    LANGUAGE plpgsql
+    AS $$
+begin
+IF cve_descarga <> '' THEN
+	UPDATE "BaseSistema"."LOGCARGAXML" T3
+	SET "USAPAGO" = 1
+	FROM (
+		SELECT t1."CVE_DESCARGA",
+			t12."ID_CARGAXML"
+		FROM "InfUsuario"."CFDICOMPROBANTE" t1
+		JOIN "BaseSistema"."LOGCARGAXML" th ON th."ID_CARGAXML"::character varying::bpchar = t1."CVE_DESCARGA"
+		JOIN "BaseSistema"."LOGDESCARGAWSAUTH" t2 ON t2."CVE_DESCARGA" = th."CVE_DESCARGA"
+		JOIN "BaseSistema"."CFGCLTESRFC" t3 ON t3."ID_RFC" = t2."ID_RFC" AND t3."STATUS" = 5
+		JOIN "BaseSistema"."CFGCLTES" t4 ON t4."ID_CLTE" = t3."ID_CLTE" AND t4."STATUS" = 3
+		JOIN "InfUsuario"."CATALOGOPROVEEDORES" t5 ON t5."RFC_EMISOR" = t1."RFCEMISOR" AND t5."STATUS" = 1
+		LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" t9 ON t9."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+		LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" t10 ON t10."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+		LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" t11 ON t11."ID_PAGO" = t10."ID_PAGO"
+		LEFT JOIN "BaseSistema"."LOGCARGAXML" t12 ON REPLACE(TRIM(t12."ARCHIVOXML"),'.xml','') = TRIM(t11."IDDOCUMENTO")
+		WHERE t1."TIPODECOMPROBANTE" = 'P'
+			AND t12."ARCHIVOXML" <> ''
+		GROUP BY t1."CVE_DESCARGA",
+			t12."ID_CARGAXML"	
+		) T4
+	WHERE T3."ID_CARGAXML" IN (T4."CVE_DESCARGA"::integer, T4."ID_CARGAXML"::integer);
+END IF;
+end;
+$$;
+
+
+ALTER PROCEDURE "BaseSistema"."MarcaPagosValidos"(cve_descarga character) OWNER TO postgres;
+
+--
+-- TOC entry 394 (class 1255 OID 57867)
+-- Name: MarcaXML(character, bigint, character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE PROCEDURE "BaseSistema"."MarcaXML"(cve_descarga character, id_rfc bigint, periodo character)
+    LANGUAGE plpgsql
+    AS $$
+begin
+IF cve_descarga <> '' THEN
+	UPDATE "BaseSistema"."LOGCARGAXML" T3
+	SET "STATUS" = 35, "FCARGA" = NOW(), "CVE_CARGA" = cve_descarga
+	FROM (
+		SELECT T1."CVE_DESCARGA", T1."PAGINA"
+		FROM "BaseSistema"."LOGCARGAXML" T1
+		INNER JOIN "BaseSistema"."LOGDESCARGAWSAUTH" T2 ON
+			--T2."CVE_DESCARGA" = T1."CVE_DESCARGA" AND 
+			T2."STATUS" = 31 AND
+			T2."MSGERROR" <> '' AND	
+			T2."ID_RFC" = id_rfc AND 
+			T2."CVE_CARGA" IS NULL AND
+			T2."TIPO" = 'CFDI'
+		WHERE T1."CVE_CARGA" IS NULL AND T1."STATUS" = 34 AND 
+			T1."PERIODO" = periodo AND 
+			T1."STATUSPERIODO" = 38
+		GROUP BY T1."CVE_DESCARGA", T1."PAGINA"
+		ORDER BY T1."CVE_DESCARGA" DESC, T1."PAGINA"
+		LIMIT 1
+		) T4
+	WHERE T4."CVE_DESCARGA" = T3."CVE_DESCARGA"
+		AND T4."PAGINA" = T3."PAGINA";
+END IF;
+end;
+$$;
+
+
+ALTER PROCEDURE "BaseSistema"."MarcaXML"(cve_descarga character, id_rfc bigint, periodo character) OWNER TO postgres;
+
+--
+-- TOC entry 397 (class 1255 OID 47419)
 -- Name: RecargaResultados(character); Type: PROCEDURE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -360,25 +672,12 @@ DECLARE HayDatos int;
 begin
 
 	SELECT COUNT(1) INTO HayDatos FROM "InfUsuario"."CFDICOMPROBANTE" WHERE "CVE_DESCARGA" = cve_descarga;
-	
 	RAISE NOTICE 'Hay datos XML (%)',HayDatos;
+	
+	--SELECT 1 as x INTO HayDatos;
 	
 	IF HayDatos > 0 THEN
 		REFRESH MATERIALIZED VIEW "InfUsuario"."CFDIVALIDADOS69Y69B" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_APLIC_ANTICIPOS" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DEVOLUCIONES" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_APLIC_ANTICIPOS" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_NC" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_NOTAS_DEBITO" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_PAGOS_CONTADO" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_PAGO_ANTICIPO" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_ANTICIPOS" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_APLIC_ANTICIPOS" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_DEVOLUCIONES" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_APLIC_ANTICIPOS" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_DESCUENTOS_NC" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_NOTAS_DEBITO" WITH DATA;
-		REFRESH MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_VTAS_CONTADO" WITH DATA;
 	END IF;
 	
 end;
@@ -386,6 +685,745 @@ $$;
 
 
 ALTER PROCEDURE "BaseSistema"."RecargaResultados"(cve_descarga character) OWNER TO postgres;
+
+--
+-- TOC entry 406 (class 1255 OID 60018)
+-- Name: SolicitaReporte(character, character, bigint); Type: FUNCTION; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE FUNCTION "BaseSistema"."SolicitaReporte"(cve_consulta character DEFAULT ''::bpchar, periodo character DEFAULT ''::bpchar, idusuario bigint DEFAULT 0) RETURNS TABLE(status character varying)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE HayDatos int;
+begin
+	IF cve_consulta = '' THEN
+		RETURN QUERY SELECT 'DIGITE UN CLAVE DE CONSULTA'::varchar AS "STATUS";
+	ELSE
+		IF periodo = '' THEN
+			RETURN QUERY SELECT 'DIGITE EL PERIODO'::varchar AS "STATUS";
+		ELSE
+			IF idusuario = 0 THEN
+				RETURN QUERY SELECT 'DIGITE EL ID DE USUARIO QUE SOLICITA EL REPORTE'::varchar AS "STATUS";
+			ELSE
+				
+				INSERT INTO "BaseSistema"."SOLCONSULPER"(
+					"CVE_CONSULTA", "PERIODO", "FH_ALTA", "ID_USR_ALTA", "STATUS")
+				VALUES (cve_consulta, periodo, NOW(), idusuario, 40);
+				
+				SELECT "ID_CONSULTA"
+				INTO HayDatos
+				FROM "BaseSistema"."SOLCONSULPER"
+				WHERE "CVE_CONSULTA" = cve_consulta AND
+					"PERIODO" = periodo AND
+					"ID_USR_ALTA" = idusuario;
+				
+				IF HayDatos > 0 THEN
+					RETURN QUERY SELECT 'EXITO'::varchar AS "STATUS";
+				ELSE
+					RETURN QUERY SELECT 'ERROR'::varchar AS "STATUS";
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+end;
+$$;
+
+
+ALTER FUNCTION "BaseSistema"."SolicitaReporte"(cve_consulta character, periodo character, idusuario bigint) OWNER TO postgres;
+
+--
+-- TOC entry 403 (class 1255 OID 59265)
+-- Name: IVA_ACREDITABLE(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_ACREDITABLE"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "IMPORTEIVA" double precision)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT R."RFC_CLTE",
+	R."RFC_ASOC",
+	COALESCE(T1."IMPORTEIVA",0)
+	+ COALESCE(T2."IMPORTEIVA",0)
+	+ COALESCE(T3."IMPORTEIVA",0)
+	- COALESCE(T4."IMPORTEIVA",0) 
+	- COALESCE(T5."IMPORTEIVA",0) 
+	+ COALESCE(T6."IMPORTEIVA",0) 
+	- COALESCE(T7."IMPORTEIVA",0) 
+	+ COALESCE(T8."IMPORTEIVA",0) AS "IMPORTEIVA"
+FROM (
+	SELECT t4."RFC" AS "RFC_CLTE",
+		t3."RFC" AS "RFC_ASOC"
+	FROM "InfUsuario"."CFDICOMPROBANTE" t1
+	JOIN "BaseSistema"."LOGCARGAXML" th ON th."ID_CARGAXML"::character varying::bpchar = t1."CVE_DESCARGA" AND th."STATUS" = 36 AND th."STATUSPERIODO" = 38
+	JOIN "BaseSistema"."SOLCONSULPER" s ON s."PERIODO" = th."PERIODO" AND s."STATUS" = 40
+	JOIN "BaseSistema"."LOGDESCARGAWSPROCESO" pr ON pr."CVE_DESCARGA" = th."CVE_DESCARGA" AND pr."STATUS" = 31
+	JOIN "BaseSistema"."CFGCLTESRFC" t3 ON t3."ID_RFC" = pr."ID_RFC" AND t3."STATUS" = 5
+	JOIN "BaseSistema"."CFGCLTES" t4 ON t4."ID_CLTE" = t3."ID_CLTE" AND t4."STATUS" = 3
+	WHERE s."ID_USR_ALTA" = idusrsolicita
+	GROUP BY t4."RFC", t3."RFC"
+	) R
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'PAGOS_CONTADO'
+	) T1 ON
+	T1."RFC_CLTE" = R."RFC_CLTE" AND
+	T1."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'PAGO_ANTICIPO'
+	) T2 ON
+	T2."RFC_CLTE" = R."RFC_CLTE" AND
+	T2."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'APLIC_ANTICIPOS'
+	) T3 ON
+	T3."RFC_CLTE" = R."RFC_CLTE" AND
+	T3."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'DISMINUCION_APLIC_ANTICIPOS'
+	) T4 ON
+	T4."RFC_CLTE" = R."RFC_CLTE" AND
+	T4."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'DISMINUCION_NC'
+	) T5 ON
+	T5."RFC_CLTE" = R."RFC_CLTE" AND
+	T5."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'NOTAS_DEBITO'
+	) T6 ON
+	T6."RFC_CLTE" = R."RFC_CLTE" AND
+	T6."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'DEVOLUCIONES'
+	) T7 ON
+	T7."RFC_CLTE" = R."RFC_CLTE" AND
+	T7."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'ACREDITABLE' AND
+		TT."IVA_SUBTIPO" = 'PAGOS'
+	) T8 ON
+	T8."RFC_CLTE" = R."RFC_CLTE" AND
+	T8."RFC_ASOC" = R."RFC_ASOC";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_ACREDITABLE"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 335 (class 1255 OID 59262)
+-- Name: IVA_DET_ASOC(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_DET_ASOC"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "IMPORTEIVA" double precision)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT t1."RFC_CLTE",
+    t1."RFC_ASOC",
+    sum(t1."IMPORTEIVA") AS "IMPORTEIVA"
+   FROM "InfUsuario"."IVA_DET_GRAL"(idusrsolicita) t1
+  GROUP BY 
+  	t1."RFC_CLTE",
+    t1."RFC_ASOC";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_DET_ASOC"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 387 (class 1255 OID 59240)
+-- Name: IVA_DET_COMPL(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_DET_COMPL"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "SERIE" character, "LUGAREXPEDICION" character, "COMPROBANTEDESCUENTO" double precision, "FORMAPAGO" character, "TIPOCAMBIO" double precision, "USOCFDI" character, "NOIDENTIFICACION" character, "CANTIDAD" double precision, "UNIDAD" character, "DESCRIPCION" character, "DESCUENTO" double precision, "VALORUNITARIO" double precision, "IMPORTE" double precision, "TASAOCUOTA" double precision, "TIPORELACION" character, "UUID" character, "FECHAPAGO" timestamp without time zone, "FORMADEPAGOP" character, "MONTO" double precision, "MONEDAP" character, "TIPOCAMBIOP" integer, "NUMEROOPERACION" integer, "RFCEMISORCTAORD" text, "CTAORDENANTE" text, "RFCEMISORCTABEN" text, "CTABENEFICIARIO" text, "DOCUMENTOSERIE" character, "NUMPARCIALIDAD" character, "MONEDADR" character, "TIPOCAMBIODR" integer, "METODODEPAGODR" character, "CLAVEPRODSERV" character, "FOLIO" character, "TRASLADOSIMPORTE" double precision, "CVE_DESCARGA" character, "IVA_TIPO" text, "IVA_SUBTIPO" text)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT 
+	t4."RFC" AS "RFC_CLTE",
+    t3."RFC" AS "RFC_ASOC",
+    t1."SERIE",
+    t1."LUGAREXPEDICION",
+    t1."DESCUENTO" AS "COMPROBANTEDESCUENTO",
+    t1."FORMAPAGO",
+    t1."TIPOCAMBIO",
+    t1."USOCFDI",
+    t6."NOIDENTIFICACION",
+    t6."CANTIDAD",
+    t6."UNIDAD",
+    t6."DESCRIPCION",
+    t6."DESCUENTO",
+    t6."VALORUNITARIO",
+    t6."IMPORTE",
+    t7."TASAOCUOTA",
+    t14."TIPORELACION",
+    t14."UUID",
+    t10."FECHAPAGO",
+    t10."FORMADEPAGOP",
+    t10."MONTO",
+    t10."MONEDAP",
+    0 AS "TIPOCAMBIOP",
+    0 AS "NUMEROOPERACION",
+    ''::text AS "RFCEMISORCTAORD",
+    ''::text AS "CTAORDENANTE",
+    ''::text AS "RFCEMISORCTABEN",
+    ''::text AS "CTABENEFICIARIO",
+    t11."SERIE" AS "DOCUMENTOSERIE",
+    t11."NUMPARCIALIDAD",
+    t11."MONEDADR",
+    0 AS "TIPOCAMBIODR",
+    t11."METODODEPAGODR",
+    t6."CLAVEPRODSERV",
+    t1."FOLIO",
+    t7."IMPORTE" AS "TRASLADOSIMPORTE",
+    t1."CVE_DESCARGA",
+	CASE
+		--ACREDITABLE
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --4
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --5
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --2
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --8
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --7
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --3
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --1
+		--TRASLADADO
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --13
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --14
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --11
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --9
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --16
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --12
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --10
+		ELSE 'NO IDENTIFICADO'
+	END AS "IVA_TIPO",
+	CASE
+		--ACREDITABLE
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DISMINUCION_NC' --4
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'NOTAS_DEBITO' --5
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DEVOLUCIONES' --2
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'PAGO_ANTICIPO' --8
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'PAGOS_CONTADO' --7
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DISMINUCION_APLIC_ANTICIPOS' --3
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'APLIC_ANTICIPOS' --1
+		--TRASLADADO
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'EGRESO_DESCUENTOS_NC' --13
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'NOTAS_DEBITO' --14
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DEVOLUCIONES' --11
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ANTICIPOS' --9
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'VTAS_CONTADO' --16
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'EGRESO_APLIC_ANTICIPOS' --12
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'APLIC_ANTICIPOS' --10
+		ELSE 'NO IDENTIFICADO'
+	END AS "IVA_SUBTIPO"
+FROM "InfUsuario"."CFDICOMPROBANTE" t1
+     JOIN "BaseSistema"."LOGCARGAXML" th ON th."ID_CARGAXML"::character varying::bpchar = t1."CVE_DESCARGA" AND th."STATUS" = 36 AND th."STATUSPERIODO" = 38
+     JOIN "BaseSistema"."SOLCONSULPER" s ON s."PERIODO" = th."PERIODO" AND s."STATUS" = 40
+     JOIN "BaseSistema"."LOGDESCARGAWSPROCESO" pr ON pr."CVE_DESCARGA" = th."CVE_DESCARGA" AND pr."STATUS" = 31
+     JOIN "BaseSistema"."CFGCLTESRFC" t3 ON t3."ID_RFC" = pr."ID_RFC" AND t3."STATUS" = 5
+     JOIN "BaseSistema"."CFGCLTES" t4 ON t4."ID_CLTE" = t3."ID_CLTE" AND t4."STATUS" = 3
+     JOIN "InfUsuario"."CATALOGOPROVEEDORES" t5 ON t5."RFC_EMISOR" = t1."RFCEMISOR" AND t5."STATUS" = 1
+     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" t6 ON t6."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" t7 ON t7."ID_CONCEPTO" = t6."ID_CONCEPTO"
+     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" t8 ON t8."ID_CONCEPTO" = t6."ID_CONCEPTO"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" t9 ON t9."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" t10 ON t10."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" t11 ON t11."ID_PAGO" = t10."ID_PAGO"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" t14 ON t14."ID_COMPROBANTE" = t14."ID_COMPROBANTE"
+	WHERE s."ID_USR_ALTA" = idusrsolicita;
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_DET_COMPL"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 398 (class 1255 OID 59249)
+-- Name: IVA_DET_CSV(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_DET_CSV"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "SERIE" character, "FOLIO" character, "TIMBREUUID" character, "FECHA" timestamp without time zone, "TIPODECOMPROBANTE" character, "LUGAREXPEDICION" character, "RFCEMISOR" character, "NOMBREEMISOR" character, "RFCRECEPTOR" character, "NOMBRERECEPTOR" character, "COMPROBANTEDESCUENTO" double precision, "SUBTOTAL" double precision, "TOTALIMPUESTOSTRASLADADOS" double precision, "RETENCIONIMPORTE" double precision, "TOTAL" double precision, "FORMAPAGO" character, "MONEDA" character, "TIPOCAMBIO" double precision, "USOCFDI" character, "CLAVEPRODSERV" character, "NOIDENTIFICACION" character, "CANTIDAD" double precision, "UNIDAD" character, "DESCRIPCION" character, "DESCUENTO" double precision, "VALORUNITARIO" double precision, "TRASLADOSIMPORTE" double precision, "IMPORTE" double precision, "TASAOCUOTA" double precision, "TIPORELACION" character, "UUID" character, "FECHAPAGO" timestamp without time zone, "FORMADEPAGOP" character, "MONTO" double precision, "MONEDAP" character, "TIPOCAMBIOP" integer, "NUMEROOPERACION" integer, "RFCEMISORCTAORD" text, "CTAORDENANTE" text, "RFCEMISORCTABEN" text, "CTABENEFICIARIO" text, "IDDOCUMENTO" character, "DOCUMENTOSERIE" character, "DOCUMENTOFOLIO" character, "IMPSALDOANT" double precision, "IMPPAGADO" double precision, "IMPSALDOINSOLUTO" double precision, "NUMPARCIALIDAD" character, "MONEDADR" character, "TIPOCAMBIODR" integer, "METODODEPAGODR" character, "CVE_DESCARGA" character, "IVA_TIPO" text, "IVA_SUBTIPO" text)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT t1."RFC_CLTE",
+    t1."RFC_ASOC",
+    t2."SERIE",
+    t1."FOLIO",
+    t1."UUID" AS "TIMBREUUID",
+    t1."FECHA",
+    t1."TIPODECOMPROBANTE",
+    t2."LUGAREXPEDICION",
+    t1."RFCEMISOR",
+    t1."NOMBREEMISOR",
+    t1."RFCRECEPTOR",
+    t1."NOMBRERECEPTOR",
+    t2."COMPROBANTEDESCUENTO",
+    t1."SUBTOTAL",
+    t1."TOTALIMPUESTOSTRASLADADOS",
+    t1."IMPORTE" AS "RETENCIONIMPORTE",
+    t1."TOTAL",
+    t2."FORMAPAGO",
+    t1."MONEDA",
+    t2."TIPOCAMBIO",
+    t2."USOCFDI",
+    t1."CLAVEPRODSERV",
+    t2."NOIDENTIFICACION",
+    t2."CANTIDAD",
+    t2."UNIDAD",
+    t2."DESCRIPCION",
+    t2."DESCUENTO",
+    t2."VALORUNITARIO",
+    t1."IMPORTEIVA",
+    t2."IMPORTE",
+    t2."TASAOCUOTA",
+    t2."TIPORELACION",
+    t2."UUID",
+    t2."FECHAPAGO",
+    t2."FORMADEPAGOP",
+    t2."MONTO",
+    t2."MONEDAP",
+    t2."TIPOCAMBIOP",
+    t2."NUMEROOPERACION",
+    t2."RFCEMISORCTAORD",
+    t2."CTAORDENANTE",
+    t2."RFCEMISORCTABEN",
+    t2."CTABENEFICIARIO",
+    t1."IDDOCUMENTO",
+    t2."DOCUMENTOSERIE",
+    t1."DOCUMENTOFOLIO",
+    t1."IMPSALDOANT",
+    t1."IMPPAGADO",
+    t1."IMPSALDOINSOLUTO",
+    t2."NUMPARCIALIDAD",
+    t2."MONEDADR",
+    t2."TIPOCAMBIODR",
+    t2."METODODEPAGODR",
+    t2."CVE_DESCARGA",
+	t2."IVA_TIPO",
+	t2."IVA_SUBTIPO"
+   FROM "InfUsuario"."IVA_DET_GRAL"(idusrsolicita) t1
+     LEFT JOIN "InfUsuario"."IVA_DET_COMPL"(idusrsolicita) t2 ON 
+	 	t2."RFC_CLTE" = t1."RFC_CLTE" AND 
+		t2."RFC_ASOC" = t1."RFC_ASOC" AND 
+		t2."FOLIO" = t1."FOLIO" AND 
+		t2."CLAVEPRODSERV" = t1."CLAVEPRODSERV" AND 
+		t2."IVA_TIPO" = t1."IVA_TIPO" AND 
+		t2."IVA_SUBTIPO" = t1."IVA_SUBTIPO";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_DET_CSV"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 401 (class 1255 OID 59256)
+-- Name: IVA_DET_FACT(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_DET_FACT"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "FOLIO" character, "UUID" character, "FECHA" timestamp without time zone, "TIPODECOMPROBANTE" character, "RFCEMISOR" character, "NOMBREEMISOR" character, "RFCRECEPTOR" character, "NOMBRERECEPTOR" character, "IVA_TIPO" text, "IVA_SUBTIPO" text, "IMPORTEIVA" double precision, "CVE_DESCARGA" character)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT t1."RFC_CLTE",
+    t1."RFC_ASOC",
+    t1."FOLIO",
+    t1."UUID",
+    t1."FECHA",
+    t1."TIPODECOMPROBANTE",
+    t1."RFCEMISOR",
+    t1."NOMBREEMISOR",
+    t1."RFCRECEPTOR",
+    t1."NOMBRERECEPTOR",
+	t1."IVA_TIPO",
+	t1."IVA_SUBTIPO",
+    sum(t1."IMPORTEIVA") AS "IMPORTEIVA",
+	t1."CVE_DESCARGA"
+   FROM "InfUsuario"."IVA_DET_GRAL"(idusrsolicita) t1
+  GROUP BY 
+  	t1."RFC_CLTE",
+    t1."RFC_ASOC",
+    t1."FOLIO",
+    t1."UUID",
+    t1."FECHA",
+    t1."TIPODECOMPROBANTE",
+    t1."RFCEMISOR",
+    t1."NOMBREEMISOR",
+    t1."RFCRECEPTOR",
+    t1."NOMBRERECEPTOR",
+	t1."IVA_TIPO",
+	t1."IVA_SUBTIPO",
+		t1."CVE_DESCARGA";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_DET_FACT"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 407 (class 1255 OID 59232)
+-- Name: IVA_DET_GRAL(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_DET_GRAL"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "FOLIO" character, "UUID" character, "FECHA" timestamp without time zone, "TIPODECOMPROBANTE" character, "RFCEMISOR" character, "NOMBREEMISOR" character, "RFCRECEPTOR" character, "NOMBRERECEPTOR" character, "SUBTOTAL" double precision, "TOTALIMPUESTOSTRASLADADOS" double precision, "IMPORTE" double precision, "TOTAL" double precision, "MONEDA" character, "FECHAPAGO" timestamp without time zone, "MONTO" double precision, "MONEDAP" character, "IDDOCUMENTO" character, "DOCUMENTOFOLIO" character, "IMPSALDOANT" double precision, "IMPPAGADO" double precision, "IMPSALDOINSOLUTO" double precision, "IMPORTEIVA" double precision, "ESTATUS_69" character, "ESTATUS_69B" character, "ESTATUS_32D" text, "METODOPAGO" character, "FORMAPAGO" character, "CLAVEPRODSERV" character, "IMPUESTO" character, "TIPORELACION" character, "CVE_DESCARGA" character, "IVA_TIPO" text, "IVA_SUBTIPO" text)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT t4."RFC" AS "RFC_CLTE",
+    t3."RFC" AS "RFC_ASOC",
+    t1."FOLIO",
+    t9."UUID",
+    t1."FECHA",
+    t1."TIPODECOMPROBANTE",
+    t1."RFCEMISOR",
+    t1."NOMBREEMISOR",
+    t1."RFCRECEPTOR",
+    t1."NOMBRERECEPTOR",
+    t1."SUBTOTAL",
+    t1."TOTALIMPUESTOSTRASLADADOS",
+    t8."IMPORTE",
+    t1."TOTAL",
+    t1."MONEDA",
+    t10."FECHAPAGO",
+    t10."MONTO",
+    t10."MONEDAP",
+    t11."IDDOCUMENTO",
+    t11."FOLIO" AS "DOCUMENTOFOLIO",
+    t11."IMPSALDOANT",
+    t11."IMPPAGADO",
+    t11."IMPSALDOINSOLUTO",
+	CASE
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" <> 'P' THEN COALESCE(t7."IMPORTE",0) 
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" <> 'P' THEN COALESCE(t8."IMPORTE",0)
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'P' THEN COALESCE(pa."IVAPAGOT",0)
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'P' THEN COALESCE(pa."IVAPAGOA",0)
+		ELSE 0
+	END AS "IMPORTEIVA",
+    t5."ESTATUS_69",
+    t5."ESTATUS_69B",
+    NULL::text AS "ESTATUS_32D",
+    t1."METODOPAGO",
+    t1."FORMAPAGO",
+    t6."CLAVEPRODSERV",
+    t7."IMPUESTO",
+    t14."TIPORELACION",
+    t1."CVE_DESCARGA",
+	CASE
+		--ACREDITABLE
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --4
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --5
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --2
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --8
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --7
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --3
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ACREDITABLE' --1
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'P'::bpchar THEN 'ACREDITABLE' --10
+		--TRASLADADO
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --13
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --14
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --11
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --9
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --16
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --12
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'TRASLADADO' --10
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'P'::bpchar THEN 'TRASLADADO' --10
+		ELSE 'NO IDENTIFICADO'
+	END AS "IVA_TIPO",
+	CASE
+		--ACREDITABLE
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DISMINUCION_NC' --4
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'NOTAS_DEBITO' --5
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DEVOLUCIONES' --2
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'PAGO_ANTICIPO' --8
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'PAGOS_CONTADO' --7
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DISMINUCION_APLIC_ANTICIPOS' --3
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'APLIC_ANTICIPOS' --1
+		WHEN t3."RFC" = t1."RFCRECEPTOR" AND t1."TIPODECOMPROBANTE" = 'P'::bpchar THEN 'PAGOS' --10
+		--TRASLADADO
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '01'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'EGRESO_DESCUENTOS_NC' --13
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '02'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'NOTAS_DEBITO' --14
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t14."TIPORELACION" = '03'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'DEVOLUCIONES' --11
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'ANTICIPOS' --9
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND (t1."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND t6."CLAVEPRODSERV" <> '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'VTAS_CONTADO' --16
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'E'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t1."FORMAPAGO" = '30'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t6."CLAVEPRODSERV" = '84111506'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'EGRESO_APLIC_ANTICIPOS' --12
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'I'::bpchar AND t1."METODOPAGO" = 'PUE'::bpchar AND t14."TIPORELACION" = '07'::bpchar AND t7."IMPUESTO" = '002'::bpchar THEN 'APLIC_ANTICIPOS' --10
+		WHEN t3."RFC" = t1."RFCEMISOR" AND t1."TIPODECOMPROBANTE" = 'P'::bpchar THEN 'PAGOS' --10
+		ELSE 'NO IDENTIFICADO'
+	END AS "IVA_SUBTIPO"
+   FROM "InfUsuario"."CFDICOMPROBANTE" t1
+     JOIN "BaseSistema"."LOGCARGAXML" th ON th."ID_CARGAXML"::character varying::bpchar = 
+	 	t1."CVE_DESCARGA" AND th."STATUS" = 36 AND th."STATUSPERIODO" = 38 AND th."USAPAGO" = 1
+     JOIN "BaseSistema"."SOLCONSULPER" s ON s."PERIODO" = th."PERIODO" AND s."STATUS" = 40
+     JOIN "BaseSistema"."LOGDESCARGAWSPROCESO" pr ON pr."CVE_DESCARGA" = th."CVE_DESCARGA" AND pr."STATUS" = 31
+     JOIN "BaseSistema"."CFGCLTESRFC" t3 ON t3."ID_RFC" = pr."ID_RFC" AND t3."STATUS" = 5
+     JOIN "BaseSistema"."CFGCLTES" t4 ON t4."ID_CLTE" = t3."ID_CLTE" AND t4."STATUS" = 3
+     JOIN "InfUsuario"."CATALOGOPROVEEDORES" t5 ON t5."RFC_EMISOR" = t1."RFCEMISOR" AND t5."STATUS" = 1
+     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" t6 ON t6."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" t7 ON t7."ID_CONCEPTO" = t6."ID_CONCEPTO"
+     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" t8 ON t8."ID_CONCEPTO" = t6."ID_CONCEPTO"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" t9 ON t9."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" t10 ON t10."ID_COMPROBANTE" = t1."ID_COMPROBANTE"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" t11 ON t11."ID_PAGO" = t10."ID_PAGO"
+     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" t14 ON t14."ID_COMPROBANTE" = t14."ID_COMPROBANTE"
+	 LEFT JOIN (
+		SELECT t11."IDDOCUMENTO", 
+		 	(t12."MONTO" / (1 + t7."TASAOCUOTA")) * t7."TASAOCUOTA" AS "IVAPAGOT",
+		 	(t12."MONTO" / (1 + t8."TASAOCUOTA")) * t8."TASAOCUOTA" AS "IVAPAGOA"
+		FROM "InfUsuario"."CFDICOMPROBANTE" t9
+		LEFT JOIN "InfUsuario"."CFDICONCEPTOS" t6 ON t6."ID_COMPROBANTE" = t9."ID_COMPROBANTE"
+		LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" t7 ON t7."ID_CONCEPTO" = t6."ID_CONCEPTO"
+		LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" t8 ON t8."ID_CONCEPTO" = t6."ID_CONCEPTO"
+		LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" t10 ON t10."ID_COMPROBANTE" = t9."ID_COMPROBANTE"
+		LEFT JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" t12 ON
+		 	t12."ID_COMPROBANTE" = t10."ID_COMPROBANTE"
+		INNER JOIN "BaseSistema"."LOGCARGAXML" t5 ON
+			t5."ID_CARGAXML"::character varying = t9."CVE_DESCARGA" AND
+			t5."STATUS" = 36 AND t5."STATUSPERIODO" = 38 AND t5."USAPAGO" = 1
+		INNER JOIN "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" t11 ON 
+		 	REPLACE(t5."ARCHIVOXML",'.xml', '') = t11."IDDOCUMENTO"
+		WHERE t9."TIPODECOMPROBANTE" = 'P' AND 
+		 	(t7."IMPUESTO" = '002' OR t8."IMPUESTO" = '002')
+	 	) pa ON pa."IDDOCUMENTO" = t11."IDDOCUMENTO"
+	WHERE s."ID_USR_ALTA" = idusrsolicita;
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_DET_GRAL"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 399 (class 1255 OID 59261)
+-- Name: IVA_DET_TIPO(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_DET_TIPO"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "IVA_TIPO" text, "IVA_SUBTIPO" text, "IMPORTEIVA" double precision)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT t1."RFC_CLTE",
+    t1."RFC_ASOC",
+    t1."IVA_TIPO",
+	t1."IVA_SUBTIPO",
+    sum(t1."IMPORTEIVA") AS "IMPORTEIVA"
+   FROM "InfUsuario"."IVA_DET_GRAL"(idusrsolicita) t1
+  GROUP BY 
+  	t1."RFC_CLTE",
+    t1."RFC_ASOC",
+    t1."IVA_TIPO",
+	t1."IVA_SUBTIPO";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_DET_TIPO"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 404 (class 1255 OID 59267)
+-- Name: IVA_DEVOLUCION(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_DEVOLUCION"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "IMPORTEIVA" double precision)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT R."RFC_CLTE",
+	R."RFC_ASOC",
+	COALESCE(T1."IMPORTEIVA",0)
+	- COALESCE(T2."IMPORTEIVA",0)
+	- COALESCE(T3."IMPORTEIVA",0) AS "IMPORTEIVA"
+FROM (
+	SELECT t4."RFC" AS "RFC_CLTE",
+		t3."RFC" AS "RFC_ASOC"
+	FROM "InfUsuario"."CFDICOMPROBANTE" t1
+	JOIN "BaseSistema"."LOGCARGAXML" th ON th."ID_CARGAXML"::character varying::bpchar = t1."CVE_DESCARGA" AND th."STATUS" = 36 AND th."STATUSPERIODO" = 38
+	JOIN "BaseSistema"."SOLCONSULPER" s ON s."PERIODO" = th."PERIODO" AND s."STATUS" = 40
+	JOIN "BaseSistema"."LOGDESCARGAWSPROCESO" pr ON pr."CVE_DESCARGA" = th."CVE_DESCARGA" AND pr."STATUS" = 31
+	JOIN "BaseSistema"."CFGCLTESRFC" t3 ON t3."ID_RFC" = pr."ID_RFC" AND t3."STATUS" = 5
+	JOIN "BaseSistema"."CFGCLTES" t4 ON t4."ID_CLTE" = t3."ID_CLTE" AND t4."STATUS" = 3
+	WHERE s."ID_USR_ALTA" = idusrsolicita
+	GROUP BY t4."RFC", t3."RFC"
+	) R
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_TRASLADADO"(idusrsolicita) TT
+	) T1 ON
+	T1."RFC_CLTE" = R."RFC_CLTE" AND
+	T1."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_ACREDITABLE"(idusrsolicita) TT
+	) T2 ON
+	T2."RFC_CLTE" = R."RFC_CLTE" AND
+	T2."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_OBSERVABLE"(idusrsolicita) TT
+	) T3 ON
+	T3."RFC_CLTE" = R."RFC_CLTE" AND
+	T3."RFC_ASOC" = R."RFC_ASOC";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_DEVOLUCION"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 388 (class 1255 OID 59266)
+-- Name: IVA_OBSERVABLE(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_OBSERVABLE"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "IMPORTEIVA" double precision)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT TT."RFC_CLTE",
+	TT."RFC_ASOC",
+	SUM(TT."IMPORTEIVA") AS "IMPORTEIVA"
+FROM "InfUsuario"."IVA_DET_GRAL"(idusrsolicita) TT
+WHERE "IVA_TIPO" = 'ACREDITABLE' AND
+	("ESTATUS_69" <> '' OR 
+	"ESTATUS_69B" <> '')
+GROUP BY TT."RFC_CLTE",
+	TT."RFC_ASOC";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_OBSERVABLE"(idusrsolicita bigint) OWNER TO postgres;
+
+--
+-- TOC entry 402 (class 1255 OID 59264)
+-- Name: IVA_TRASLADADO(bigint); Type: FUNCTION; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE FUNCTION "InfUsuario"."IVA_TRASLADADO"(idusrsolicita bigint DEFAULT 0) RETURNS TABLE("RFC_CLTE" character, "RFC_ASOC" character, "IMPORTEIVA" double precision)
+    LANGUAGE plpgsql
+    AS $$
+begin
+RETURN QUERY 
+SELECT R."RFC_CLTE",
+	R."RFC_ASOC",
+	COALESCE(T1."IMPORTEIVA",0)
+	+ COALESCE(T2."IMPORTEIVA",0)
+	+ COALESCE(T3."IMPORTEIVA",0)
+	- COALESCE(T4."IMPORTEIVA",0) 
+	- COALESCE(T5."IMPORTEIVA",0) 
+	+ COALESCE(T6."IMPORTEIVA",0) 
+	- COALESCE(T7."IMPORTEIVA",0) 
+	+ COALESCE(T8."IMPORTEIVA",0) AS "IMPORTEIVA"
+FROM (
+	SELECT t4."RFC" AS "RFC_CLTE",
+		t3."RFC" AS "RFC_ASOC"
+	FROM "InfUsuario"."CFDICOMPROBANTE" t1
+	JOIN "BaseSistema"."LOGCARGAXML" th ON th."ID_CARGAXML"::character varying::bpchar = t1."CVE_DESCARGA" AND th."STATUS" = 36 AND th."STATUSPERIODO" = 38
+	JOIN "BaseSistema"."SOLCONSULPER" s ON s."PERIODO" = th."PERIODO" AND s."STATUS" = 40
+	JOIN "BaseSistema"."LOGDESCARGAWSPROCESO" pr ON pr."CVE_DESCARGA" = th."CVE_DESCARGA" AND pr."STATUS" = 31
+	JOIN "BaseSistema"."CFGCLTESRFC" t3 ON t3."ID_RFC" = pr."ID_RFC" AND t3."STATUS" = 5
+	JOIN "BaseSistema"."CFGCLTES" t4 ON t4."ID_CLTE" = t3."ID_CLTE" AND t4."STATUS" = 3
+	WHERE s."ID_USR_ALTA" = idusrsolicita
+	GROUP BY t4."RFC", t3."RFC"
+	) R
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'VTAS_CONTADO'
+	) T1 ON
+	T1."RFC_CLTE" = R."RFC_CLTE" AND
+	T1."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'ANTICIPOS'
+	) T2 ON
+	T2."RFC_CLTE" = R."RFC_CLTE" AND
+	T2."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'APLIC_ANTICIPOS'
+	) T3 ON
+	T3."RFC_CLTE" = R."RFC_CLTE" AND
+	T3."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'EGRESO_APLIC_ANTICIPOS'
+	) T4 ON
+	T4."RFC_CLTE" = R."RFC_CLTE" AND
+	T4."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'EGRESO_DESCUENTOS_NC'
+	) T5 ON
+	T5."RFC_CLTE" = R."RFC_CLTE" AND
+	T5."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'NOTAS_DEBITO'
+	) T6 ON
+	T6."RFC_CLTE" = R."RFC_CLTE" AND
+	T6."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'DEVOLUCIONES'
+	) T7 ON
+	T7."RFC_CLTE" = R."RFC_CLTE" AND
+	T7."RFC_ASOC" = R."RFC_ASOC"
+LEFT JOIN (
+	SELECT TT."RFC_CLTE", TT."RFC_ASOC", TT."IMPORTEIVA" 
+	FROM "InfUsuario"."IVA_DET_TIPO"(idusrsolicita) TT
+	WHERE TT."IVA_TIPO" = 'TRASLADADO' AND
+		TT."IVA_SUBTIPO" = 'PAGOS'
+	) T8 ON
+	T8."RFC_CLTE" = R."RFC_CLTE" AND
+	T8."RFC_ASOC" = R."RFC_ASOC";
+end;
+$$;
+
+
+ALTER FUNCTION "InfUsuario"."IVA_TRASLADADO"(idusrsolicita bigint) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -421,7 +1459,7 @@ CREATE SEQUENCE "BaseSistema"."CATACCIONES_ID_ACCION_seq"
 ALTER TABLE "BaseSistema"."CATACCIONES_ID_ACCION_seq" OWNER TO postgres;
 
 --
--- TOC entry 3721 (class 0 OID 0)
+-- TOC entry 3710 (class 0 OID 0)
 -- Dependencies: 214
 -- Name: CATACCIONES_ID_ACCION_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
 --
@@ -516,7 +1554,7 @@ CREATE SEQUENCE "BaseSistema"."CATSTATUS_ID_STATUS_seq"
 ALTER TABLE "BaseSistema"."CATSTATUS_ID_STATUS_seq" OWNER TO postgres;
 
 --
--- TOC entry 3722 (class 0 OID 0)
+-- TOC entry 3711 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: CATSTATUS_ID_STATUS_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
 --
@@ -581,7 +1619,7 @@ CREATE TABLE "BaseSistema"."CFGCLTES" (
 ALTER TABLE "BaseSistema"."CFGCLTES" OWNER TO postgres;
 
 --
--- TOC entry 329 (class 1259 OID 45432)
+-- TOC entry 312 (class 1259 OID 45432)
 -- Name: CFGCLTESCREDENCIALES_ID_CRED_seq; Type: SEQUENCE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -596,7 +1634,7 @@ CREATE SEQUENCE "BaseSistema"."CFGCLTESCREDENCIALES_ID_CRED_seq"
 ALTER TABLE "BaseSistema"."CFGCLTESCREDENCIALES_ID_CRED_seq" OWNER TO postgres;
 
 --
--- TOC entry 330 (class 1259 OID 45434)
+-- TOC entry 313 (class 1259 OID 45434)
 -- Name: CFGCLTESCREDENCIALES; Type: TABLE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -786,12 +1824,57 @@ CREATE SEQUENCE "BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"
 ALTER TABLE "BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq" OWNER TO postgres;
 
 --
--- TOC entry 3723 (class 0 OID 0)
+-- TOC entry 3712 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: CFGFILEUNLOADS_ID_UNLOAD_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
 --
 
 ALTER SEQUENCE "BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq" OWNED BY "BaseSistema"."LOGDESCARGAFILE"."ID_DESCARGA";
+
+
+--
+-- TOC entry 330 (class 1259 OID 57356)
+-- Name: CFGPERIODOS; Type: TABLE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE TABLE "BaseSistema"."CFGPERIODOS" (
+    "ID_PERIODO" integer NOT NULL,
+    "PERIODO" character(6),
+    "FECHAINICIAL" timestamp without time zone,
+    "FECHAFINAL" timestamp without time zone,
+    "FH_ALTA" timestamp without time zone,
+    "FH_BAJA" timestamp without time zone,
+    "ID_USR_ALTA" bigint,
+    "ID_USR_BAJA" bigint,
+    "STATUS" bigint
+);
+
+
+ALTER TABLE "BaseSistema"."CFGPERIODOS" OWNER TO postgres;
+
+--
+-- TOC entry 329 (class 1259 OID 57354)
+-- Name: CFGPERIODOS_ID_PERIODO_seq; Type: SEQUENCE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE SEQUENCE "BaseSistema"."CFGPERIODOS_ID_PERIODO_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE "BaseSistema"."CFGPERIODOS_ID_PERIODO_seq" OWNER TO postgres;
+
+--
+-- TOC entry 3713 (class 0 OID 0)
+-- Dependencies: 329
+-- Name: CFGPERIODOS_ID_PERIODO_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
+--
+
+ALTER SEQUENCE "BaseSistema"."CFGPERIODOS_ID_PERIODO_seq" OWNED BY "BaseSistema"."CFGPERIODOS"."ID_PERIODO";
 
 
 --
@@ -804,11 +1887,11 @@ CREATE TABLE "BaseSistema"."INF69" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 
@@ -847,7 +1930,44 @@ CREATE TABLE "BaseSistema"."INF69B" (
 ALTER TABLE "BaseSistema"."INF69B" OWNER TO postgres;
 
 --
--- TOC entry 331 (class 1259 OID 45490)
+-- TOC entry 327 (class 1259 OID 53687)
+-- Name: LOGCARGAXML_ID_CARGAXML_seq; Type: SEQUENCE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE SEQUENCE "BaseSistema"."LOGCARGAXML_ID_CARGAXML_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    MAXVALUE 2147483647
+    CACHE 1;
+
+
+ALTER TABLE "BaseSistema"."LOGCARGAXML_ID_CARGAXML_seq" OWNER TO postgres;
+
+--
+-- TOC entry 328 (class 1259 OID 53689)
+-- Name: LOGCARGAXML; Type: TABLE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE TABLE "BaseSistema"."LOGCARGAXML" (
+    "ID_CARGAXML" integer DEFAULT nextval('"BaseSistema"."LOGCARGAXML_ID_CARGAXML_seq"'::regclass) NOT NULL,
+    "CVE_DESCARGA" character(15),
+    "ARCHIVOXML" character(50),
+    "STATUS" bigint,
+    "MSGERROR" text,
+    "FCARGA" timestamp without time zone,
+    "PAGINA" bigint,
+    "CVE_CARGA" character(15),
+    "USAPAGO" bigint,
+    "PERIODO" character(6),
+    "STATUSPERIODO" bigint
+);
+
+
+ALTER TABLE "BaseSistema"."LOGCARGAXML" OWNER TO postgres;
+
+--
+-- TOC entry 314 (class 1259 OID 45490)
 -- Name: LOGDESCARGAWSCABECERA_ID_DESCARGA_seq; Type: SEQUENCE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -862,7 +1982,7 @@ CREATE SEQUENCE "BaseSistema"."LOGDESCARGAWSCABECERA_ID_DESCARGA_seq"
 ALTER TABLE "BaseSistema"."LOGDESCARGAWSCABECERA_ID_DESCARGA_seq" OWNER TO postgres;
 
 --
--- TOC entry 332 (class 1259 OID 45499)
+-- TOC entry 315 (class 1259 OID 45499)
 -- Name: LOGDESCARGAWSAUTH; Type: TABLE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -883,7 +2003,7 @@ CREATE TABLE "BaseSistema"."LOGDESCARGAWSAUTH" (
 ALTER TABLE "BaseSistema"."LOGDESCARGAWSAUTH" OWNER TO postgres;
 
 --
--- TOC entry 333 (class 1259 OID 45527)
+-- TOC entry 316 (class 1259 OID 45527)
 -- Name: LOGDESCARGAWSPROCESO_ID_DESCARGA_seq; Type: SEQUENCE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -898,7 +2018,7 @@ CREATE SEQUENCE "BaseSistema"."LOGDESCARGAWSPROCESO_ID_DESCARGA_seq"
 ALTER TABLE "BaseSistema"."LOGDESCARGAWSPROCESO_ID_DESCARGA_seq" OWNER TO postgres;
 
 --
--- TOC entry 334 (class 1259 OID 45529)
+-- TOC entry 317 (class 1259 OID 45529)
 -- Name: LOGDESCARGAWSPROCESO; Type: TABLE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -918,7 +2038,7 @@ CREATE TABLE "BaseSistema"."LOGDESCARGAWSPROCESO" (
 ALTER TABLE "BaseSistema"."LOGDESCARGAWSPROCESO" OWNER TO postgres;
 
 --
--- TOC entry 235 (class 1259 OID 38373)
+-- TOC entry 326 (class 1259 OID 53271)
 -- Name: PROVEEDORES69; Type: MATERIALIZED VIEW; Schema: BaseSistema; Owner: postgres
 --
 
@@ -942,7 +2062,7 @@ CREATE MATERIALIZED VIEW "BaseSistema"."PROVEEDORES69" AS
 ALTER TABLE "BaseSistema"."PROVEEDORES69" OWNER TO postgres;
 
 --
--- TOC entry 236 (class 1259 OID 38378)
+-- TOC entry 235 (class 1259 OID 38378)
 -- Name: PROVEEDORES69B; Type: MATERIALIZED VIEW; Schema: BaseSistema; Owner: postgres
 --
 
@@ -961,7 +2081,7 @@ CREATE MATERIALIZED VIEW "BaseSistema"."PROVEEDORES69B" AS
 ALTER TABLE "BaseSistema"."PROVEEDORES69B" OWNER TO postgres;
 
 --
--- TOC entry 237 (class 1259 OID 38383)
+-- TOC entry 236 (class 1259 OID 38383)
 -- Name: RELACIONSTATUS; Type: VIEW; Schema: BaseSistema; Owner: postgres
 --
 
@@ -979,7 +2099,51 @@ CREATE VIEW "BaseSistema"."RELACIONSTATUS" AS
 ALTER TABLE "BaseSistema"."RELACIONSTATUS" OWNER TO postgres;
 
 --
--- TOC entry 238 (class 1259 OID 38387)
+-- TOC entry 332 (class 1259 OID 57884)
+-- Name: SOLCONSULPER; Type: TABLE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE TABLE "BaseSistema"."SOLCONSULPER" (
+    "ID_CONSULTA" integer NOT NULL,
+    "CVE_CONSULTA" character(15),
+    "PERIODO" character(6),
+    "FH_ALTA" timestamp without time zone,
+    "FH_BAJA" timestamp without time zone,
+    "ID_USR_ALTA" bigint,
+    "ID_USR_BAJA" bigint,
+    "STATUS" bigint
+);
+
+
+ALTER TABLE "BaseSistema"."SOLCONSULPER" OWNER TO postgres;
+
+--
+-- TOC entry 331 (class 1259 OID 57882)
+-- Name: SOLCONSULPER_ID_CONSULTA_seq; Type: SEQUENCE; Schema: BaseSistema; Owner: postgres
+--
+
+CREATE SEQUENCE "BaseSistema"."SOLCONSULPER_ID_CONSULTA_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE "BaseSistema"."SOLCONSULPER_ID_CONSULTA_seq" OWNER TO postgres;
+
+--
+-- TOC entry 3714 (class 0 OID 0)
+-- Dependencies: 331
+-- Name: SOLCONSULPER_ID_CONSULTA_seq; Type: SEQUENCE OWNED BY; Schema: BaseSistema; Owner: postgres
+--
+
+ALTER SEQUENCE "BaseSistema"."SOLCONSULPER_ID_CONSULTA_seq" OWNED BY "BaseSistema"."SOLCONSULPER"."ID_CONSULTA";
+
+
+--
+-- TOC entry 237 (class 1259 OID 38387)
 -- Name: USRSIST_ID_USR_seq; Type: SEQUENCE; Schema: BaseSistema; Owner: postgres
 --
 
@@ -994,7 +2158,7 @@ CREATE SEQUENCE "BaseSistema"."USRSIST_ID_USR_seq"
 ALTER TABLE "BaseSistema"."USRSIST_ID_USR_seq" OWNER TO postgres;
 
 --
--- TOC entry 239 (class 1259 OID 38389)
+-- TOC entry 238 (class 1259 OID 38389)
 -- Name: INF69_ID_INF_seq; Type: SEQUENCE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1009,7 +2173,7 @@ CREATE SEQUENCE "BaseSistemaHistorico"."INF69_ID_INF_seq"
 ALTER TABLE "BaseSistemaHistorico"."INF69_ID_INF_seq" OWNER TO postgres;
 
 --
--- TOC entry 240 (class 1259 OID 38391)
+-- TOC entry 239 (class 1259 OID 38391)
 -- Name: INF69; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1018,13 +2182,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 )
 PARTITION BY RANGE ("FH_HIST");
@@ -1033,7 +2197,7 @@ PARTITION BY RANGE ("FH_HIST");
 ALTER TABLE "BaseSistemaHistorico"."INF69" OWNER TO postgres;
 
 --
--- TOC entry 241 (class 1259 OID 38395)
+-- TOC entry 240 (class 1259 OID 38395)
 -- Name: INF69B_ID_INF_seq; Type: SEQUENCE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1048,7 +2212,7 @@ CREATE SEQUENCE "BaseSistemaHistorico"."INF69B_ID_INF_seq"
 ALTER TABLE "BaseSistemaHistorico"."INF69B_ID_INF_seq" OWNER TO postgres;
 
 --
--- TOC entry 242 (class 1259 OID 38397)
+-- TOC entry 241 (class 1259 OID 38397)
 -- Name: INF69B; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1083,7 +2247,7 @@ PARTITION BY RANGE ("FH_HIST");
 ALTER TABLE "BaseSistemaHistorico"."INF69B" OWNER TO postgres;
 
 --
--- TOC entry 243 (class 1259 OID 38401)
+-- TOC entry 242 (class 1259 OID 38401)
 -- Name: INF69B_y2019m09; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1118,7 +2282,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2019m09" OWNER TO postgres;
 
 --
--- TOC entry 244 (class 1259 OID 38408)
+-- TOC entry 243 (class 1259 OID 38408)
 -- Name: INF69B_y2019m10; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1153,7 +2317,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2019m10" OWNER TO postgres;
 
 --
--- TOC entry 245 (class 1259 OID 38415)
+-- TOC entry 244 (class 1259 OID 38415)
 -- Name: INF69B_y2019m11; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1188,7 +2352,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2019m11" OWNER TO postgres;
 
 --
--- TOC entry 246 (class 1259 OID 38422)
+-- TOC entry 245 (class 1259 OID 38422)
 -- Name: INF69B_y2019m12; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1223,7 +2387,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2019m12" OWNER TO postgres;
 
 --
--- TOC entry 247 (class 1259 OID 38429)
+-- TOC entry 246 (class 1259 OID 38429)
 -- Name: INF69B_y2020m01; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1258,7 +2422,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m01" OWNER TO postgres;
 
 --
--- TOC entry 248 (class 1259 OID 38436)
+-- TOC entry 247 (class 1259 OID 38436)
 -- Name: INF69B_y2020m02; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1293,7 +2457,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m02" OWNER TO postgres;
 
 --
--- TOC entry 249 (class 1259 OID 38443)
+-- TOC entry 248 (class 1259 OID 38443)
 -- Name: INF69B_y2020m03; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1328,7 +2492,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m03" OWNER TO postgres;
 
 --
--- TOC entry 250 (class 1259 OID 38450)
+-- TOC entry 249 (class 1259 OID 38450)
 -- Name: INF69B_y2020m04; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1363,7 +2527,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m04" OWNER TO postgres;
 
 --
--- TOC entry 251 (class 1259 OID 38457)
+-- TOC entry 250 (class 1259 OID 38457)
 -- Name: INF69B_y2020m05; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1398,7 +2562,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m05" OWNER TO postgres;
 
 --
--- TOC entry 252 (class 1259 OID 38464)
+-- TOC entry 251 (class 1259 OID 38464)
 -- Name: INF69B_y2020m06; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1433,7 +2597,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m06" OWNER TO postgres;
 
 --
--- TOC entry 253 (class 1259 OID 38471)
+-- TOC entry 252 (class 1259 OID 38471)
 -- Name: INF69B_y2020m07; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1468,7 +2632,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m07" OWNER TO postgres;
 
 --
--- TOC entry 254 (class 1259 OID 38478)
+-- TOC entry 253 (class 1259 OID 38478)
 -- Name: INF69B_y2020m08; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1503,7 +2667,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69B" ATTACH PARTITION "BaseSistemaHi
 ALTER TABLE "BaseSistemaHistorico"."INF69B_y2020m08" OWNER TO postgres;
 
 --
--- TOC entry 255 (class 1259 OID 38485)
+-- TOC entry 254 (class 1259 OID 38485)
 -- Name: INF69_y2019m09; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1512,13 +2676,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2019m09" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2019m09" FOR VALUES FROM ('2019-09-01') TO ('2019-10-01');
@@ -1527,7 +2691,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2019m09" OWNER TO postgres;
 
 --
--- TOC entry 256 (class 1259 OID 38489)
+-- TOC entry 255 (class 1259 OID 38489)
 -- Name: INF69_y2019m10; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1536,13 +2700,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2019m10" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2019m10" FOR VALUES FROM ('2019-10-01') TO ('2019-11-01');
@@ -1551,7 +2715,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2019m10" OWNER TO postgres;
 
 --
--- TOC entry 257 (class 1259 OID 38493)
+-- TOC entry 256 (class 1259 OID 38493)
 -- Name: INF69_y2019m11; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1560,13 +2724,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2019m11" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2019m11" FOR VALUES FROM ('2019-11-01') TO ('2019-12-01');
@@ -1575,7 +2739,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2019m11" OWNER TO postgres;
 
 --
--- TOC entry 258 (class 1259 OID 38497)
+-- TOC entry 257 (class 1259 OID 38497)
 -- Name: INF69_y2019m12; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1584,13 +2748,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2019m12" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2019m12" FOR VALUES FROM ('2019-12-01') TO ('2020-01-01');
@@ -1599,7 +2763,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2019m12" OWNER TO postgres;
 
 --
--- TOC entry 259 (class 1259 OID 38501)
+-- TOC entry 258 (class 1259 OID 38501)
 -- Name: INF69_y2020m01; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1608,13 +2772,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m01" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m01" FOR VALUES FROM ('2020-01-01') TO ('2020-02-01');
@@ -1623,7 +2787,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m01" OWNER TO postgres;
 
 --
--- TOC entry 260 (class 1259 OID 38505)
+-- TOC entry 259 (class 1259 OID 38505)
 -- Name: INF69_y2020m02; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1632,13 +2796,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m02" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m02" FOR VALUES FROM ('2020-02-01') TO ('2020-03-01');
@@ -1647,7 +2811,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m02" OWNER TO postgres;
 
 --
--- TOC entry 261 (class 1259 OID 38509)
+-- TOC entry 260 (class 1259 OID 38509)
 -- Name: INF69_y2020m03; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1656,13 +2820,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m03" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m03" FOR VALUES FROM ('2020-03-01') TO ('2020-04-01');
@@ -1671,7 +2835,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m03" OWNER TO postgres;
 
 --
--- TOC entry 262 (class 1259 OID 38513)
+-- TOC entry 261 (class 1259 OID 38513)
 -- Name: INF69_y2020m04; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1680,13 +2844,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m04" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m04" FOR VALUES FROM ('2020-04-01') TO ('2020-05-01');
@@ -1695,7 +2859,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m04" OWNER TO postgres;
 
 --
--- TOC entry 263 (class 1259 OID 38517)
+-- TOC entry 262 (class 1259 OID 38517)
 -- Name: INF69_y2020m05; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1704,13 +2868,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m05" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m05" FOR VALUES FROM ('2020-05-01') TO ('2020-06-01');
@@ -1719,7 +2883,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m05" OWNER TO postgres;
 
 --
--- TOC entry 264 (class 1259 OID 38521)
+-- TOC entry 263 (class 1259 OID 38521)
 -- Name: INF69_y2020m06; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1728,13 +2892,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m06" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m06" FOR VALUES FROM ('2020-06-01') TO ('2020-07-01');
@@ -1743,7 +2907,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m06" OWNER TO postgres;
 
 --
--- TOC entry 265 (class 1259 OID 38525)
+-- TOC entry 264 (class 1259 OID 38525)
 -- Name: INF69_y2020m07; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1752,13 +2916,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m07" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m07" FOR VALUES FROM ('2020-07-01') TO ('2020-08-01');
@@ -1767,7 +2931,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m07" OWNER TO postgres;
 
 --
--- TOC entry 266 (class 1259 OID 38529)
+-- TOC entry 265 (class 1259 OID 38529)
 -- Name: INF69_y2020m08; Type: TABLE; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
@@ -1776,13 +2940,13 @@ CREATE TABLE "BaseSistemaHistorico"."INF69_y2020m08" (
     "RFC" character(13),
     "RAZON_SOC" character(255),
     "TPO_PERS" character(1),
-    "SUPUESTO" character(20),
+    "SUPUESTO" character(50),
     "FH_PRIM_PUB" timestamp with time zone,
     "MNTO" character(30),
     "FH_PUB" timestamp without time zone,
     "CVE_DESCARGA" character(15),
     "FH_HIST" date NOT NULL,
-    "AGRUPACION" character(20),
+    "AGRUPACION" character(50),
     "SELECCION" bigint
 );
 ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHistorico"."INF69_y2020m08" FOR VALUES FROM ('2020-08-01') TO ('2020-09-01');
@@ -1791,7 +2955,7 @@ ALTER TABLE ONLY "BaseSistemaHistorico"."INF69" ATTACH PARTITION "BaseSistemaHis
 ALTER TABLE "BaseSistemaHistorico"."INF69_y2020m08" OWNER TO postgres;
 
 --
--- TOC entry 267 (class 1259 OID 38533)
+-- TOC entry 266 (class 1259 OID 38533)
 -- Name: INF32D_ID_INF_seq; Type: SEQUENCE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1806,7 +2970,7 @@ CREATE SEQUENCE "InfHistorica"."INF32D_ID_INF_seq"
 ALTER TABLE "InfHistorica"."INF32D_ID_INF_seq" OWNER TO postgres;
 
 --
--- TOC entry 268 (class 1259 OID 38535)
+-- TOC entry 267 (class 1259 OID 38535)
 -- Name: INF32D; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1823,7 +2987,7 @@ PARTITION BY RANGE ("FH_PERIODO");
 ALTER TABLE "InfHistorica"."INF32D" OWNER TO postgres;
 
 --
--- TOC entry 269 (class 1259 OID 38539)
+-- TOC entry 268 (class 1259 OID 38539)
 -- Name: INF32D_y2019m09; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1840,7 +3004,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2019m09" OWNER TO postgres;
 
 --
--- TOC entry 270 (class 1259 OID 38543)
+-- TOC entry 269 (class 1259 OID 38543)
 -- Name: INF32D_y2019m10; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1857,7 +3021,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2019m10" OWNER TO postgres;
 
 --
--- TOC entry 271 (class 1259 OID 38547)
+-- TOC entry 270 (class 1259 OID 38547)
 -- Name: INF32D_y2019m11; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1874,7 +3038,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2019m11" OWNER TO postgres;
 
 --
--- TOC entry 272 (class 1259 OID 38551)
+-- TOC entry 271 (class 1259 OID 38551)
 -- Name: INF32D_y2019m12; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1891,7 +3055,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2019m12" OWNER TO postgres;
 
 --
--- TOC entry 273 (class 1259 OID 38555)
+-- TOC entry 272 (class 1259 OID 38555)
 -- Name: INF32D_y2020m01; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1908,7 +3072,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m01" OWNER TO postgres;
 
 --
--- TOC entry 274 (class 1259 OID 38559)
+-- TOC entry 273 (class 1259 OID 38559)
 -- Name: INF32D_y2020m02; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1925,7 +3089,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m02" OWNER TO postgres;
 
 --
--- TOC entry 275 (class 1259 OID 38563)
+-- TOC entry 274 (class 1259 OID 38563)
 -- Name: INF32D_y2020m03; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1942,7 +3106,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m03" OWNER TO postgres;
 
 --
--- TOC entry 276 (class 1259 OID 38567)
+-- TOC entry 275 (class 1259 OID 38567)
 -- Name: INF32D_y2020m04; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1959,7 +3123,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m04" OWNER TO postgres;
 
 --
--- TOC entry 277 (class 1259 OID 38571)
+-- TOC entry 276 (class 1259 OID 38571)
 -- Name: INF32D_y2020m05; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1976,7 +3140,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m05" OWNER TO postgres;
 
 --
--- TOC entry 278 (class 1259 OID 38575)
+-- TOC entry 277 (class 1259 OID 38575)
 -- Name: INF32D_y2020m06; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -1993,7 +3157,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m06" OWNER TO postgres;
 
 --
--- TOC entry 279 (class 1259 OID 38579)
+-- TOC entry 278 (class 1259 OID 38579)
 -- Name: INF32D_y2020m07; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2010,7 +3174,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m07" OWNER TO postgres;
 
 --
--- TOC entry 280 (class 1259 OID 38583)
+-- TOC entry 279 (class 1259 OID 38583)
 -- Name: INF32D_y2020m08; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2027,7 +3191,7 @@ ALTER TABLE ONLY "InfHistorica"."INF32D" ATTACH PARTITION "InfHistorica"."INF32D
 ALTER TABLE "InfHistorica"."INF32D_y2020m08" OWNER TO postgres;
 
 --
--- TOC entry 281 (class 1259 OID 38587)
+-- TOC entry 280 (class 1259 OID 38587)
 -- Name: INFMETA_ID_INF_seq; Type: SEQUENCE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2042,7 +3206,7 @@ CREATE SEQUENCE "InfHistorica"."INFMETA_ID_INF_seq"
 ALTER TABLE "InfHistorica"."INFMETA_ID_INF_seq" OWNER TO postgres;
 
 --
--- TOC entry 282 (class 1259 OID 38589)
+-- TOC entry 281 (class 1259 OID 38589)
 -- Name: INFMETA; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2069,7 +3233,7 @@ PARTITION BY RANGE ("FH_PERIODO");
 ALTER TABLE "InfHistorica"."INFMETA" OWNER TO postgres;
 
 --
--- TOC entry 283 (class 1259 OID 38593)
+-- TOC entry 282 (class 1259 OID 38593)
 -- Name: INFMETA_y2019m09; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2096,7 +3260,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2019m09" OWNER TO postgres;
 
 --
--- TOC entry 284 (class 1259 OID 38597)
+-- TOC entry 283 (class 1259 OID 38597)
 -- Name: INFMETA_y2019m10; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2123,7 +3287,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2019m10" OWNER TO postgres;
 
 --
--- TOC entry 285 (class 1259 OID 38601)
+-- TOC entry 284 (class 1259 OID 38601)
 -- Name: INFMETA_y2019m11; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2150,7 +3314,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2019m11" OWNER TO postgres;
 
 --
--- TOC entry 286 (class 1259 OID 38605)
+-- TOC entry 285 (class 1259 OID 38605)
 -- Name: INFMETA_y2019m12; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2177,7 +3341,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2019m12" OWNER TO postgres;
 
 --
--- TOC entry 287 (class 1259 OID 38609)
+-- TOC entry 286 (class 1259 OID 38609)
 -- Name: INFMETA_y2020m01; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2204,7 +3368,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m01" OWNER TO postgres;
 
 --
--- TOC entry 288 (class 1259 OID 38613)
+-- TOC entry 287 (class 1259 OID 38613)
 -- Name: INFMETA_y2020m02; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2231,7 +3395,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m02" OWNER TO postgres;
 
 --
--- TOC entry 289 (class 1259 OID 38617)
+-- TOC entry 288 (class 1259 OID 38617)
 -- Name: INFMETA_y2020m03; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2258,7 +3422,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m03" OWNER TO postgres;
 
 --
--- TOC entry 290 (class 1259 OID 38621)
+-- TOC entry 289 (class 1259 OID 38621)
 -- Name: INFMETA_y2020m04; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2285,7 +3449,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m04" OWNER TO postgres;
 
 --
--- TOC entry 291 (class 1259 OID 38625)
+-- TOC entry 290 (class 1259 OID 38625)
 -- Name: INFMETA_y2020m05; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2312,7 +3476,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m05" OWNER TO postgres;
 
 --
--- TOC entry 292 (class 1259 OID 38629)
+-- TOC entry 291 (class 1259 OID 38629)
 -- Name: INFMETA_y2020m06; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2339,7 +3503,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m06" OWNER TO postgres;
 
 --
--- TOC entry 293 (class 1259 OID 38633)
+-- TOC entry 292 (class 1259 OID 38633)
 -- Name: INFMETA_y2020m07; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2366,7 +3530,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m07" OWNER TO postgres;
 
 --
--- TOC entry 294 (class 1259 OID 38637)
+-- TOC entry 293 (class 1259 OID 38637)
 -- Name: INFMETA_y2020m08; Type: TABLE; Schema: InfHistorica; Owner: postgres
 --
 
@@ -2393,7 +3557,7 @@ ALTER TABLE ONLY "InfHistorica"."INFMETA" ATTACH PARTITION "InfHistorica"."INFME
 ALTER TABLE "InfHistorica"."INFMETA_y2020m08" OWNER TO postgres;
 
 --
--- TOC entry 295 (class 1259 OID 38641)
+-- TOC entry 294 (class 1259 OID 38641)
 -- Name: INFMETA; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2418,7 +3582,7 @@ CREATE TABLE "InfUsuario"."INFMETA" (
 ALTER TABLE "InfUsuario"."INFMETA" OWNER TO postgres;
 
 --
--- TOC entry 296 (class 1259 OID 38644)
+-- TOC entry 333 (class 1259 OID 60006)
 -- Name: CATALOGOPROVEEDORES; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2430,7 +3594,8 @@ CREATE MATERIALIZED VIEW "InfUsuario"."CATALOGOPROVEEDORES" AS
     tb."ESTATUS_69",
     tb."FH_PUB_69",
     tb."ESTATUS_69B",
-    tb."FH_PUB_69B"
+    tb."FH_PUB_69B",
+    tb."STATUS"
    FROM ( SELECT te."RFC" AS "RFC_CLTE",
             td."RFC" AS "RFC_ASOC",
             ta."RFC_EMISOR",
@@ -2438,21 +3603,52 @@ CREATE MATERIALIZED VIEW "InfUsuario"."CATALOGOPROVEEDORES" AS
             tb_1."ESTATUS_69",
             tb_1."FH_PUB_69",
             tf."ESTATUS_69B",
-            tf."FH_PUB_69B"
+            tf."FH_PUB_69B",
+            ta."STATUS"
            FROM ((((("InfUsuario"."INFMETA" ta
              LEFT JOIN "BaseSistema"."PROVEEDORES69" tb_1 ON ((tb_1."RFC" = ta."RFC_EMISOR")))
              LEFT JOIN "BaseSistema"."PROVEEDORES69B" tf ON ((tf."RFC" = ta."RFC_EMISOR")))
              LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = ta."CVE_DESCARGA")))
              LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
              LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))) tb
-  GROUP BY tb."RFC_CLTE", tb."RFC_ASOC", tb."RFC_EMISOR", tb."NAME_EMISOR", tb."ESTATUS_69", tb."FH_PUB_69", tb."ESTATUS_69B", tb."FH_PUB_69B"
+  GROUP BY tb."RFC_CLTE", tb."RFC_ASOC", tb."RFC_EMISOR", tb."NAME_EMISOR", tb."ESTATUS_69", tb."FH_PUB_69", tb."ESTATUS_69B", tb."FH_PUB_69B", tb."STATUS"
   WITH NO DATA;
 
 
 ALTER TABLE "InfUsuario"."CATALOGOPROVEEDORES" OWNER TO postgres;
 
 --
--- TOC entry 337 (class 1259 OID 47141)
+-- TOC entry 324 (class 1259 OID 47645)
+-- Name: CFDICOMPLEMENTOSPAGOS_ID_PAGODOCS_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE SEQUENCE "InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGODOCS_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    MAXVALUE 2147483647
+    CACHE 1;
+
+
+ALTER TABLE "InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGODOCS_seq" OWNER TO postgres;
+
+--
+-- TOC entry 322 (class 1259 OID 47639)
+-- Name: CFDICOMPLEMENTOSPAGOS_ID_PAGO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE SEQUENCE "InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGO_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    MAXVALUE 2147483647
+    CACHE 1;
+
+
+ALTER TABLE "InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGO_seq" OWNER TO postgres;
+
+--
+-- TOC entry 320 (class 1259 OID 47141)
 -- Name: CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2467,7 +3663,7 @@ CREATE SEQUENCE "InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq"
 ALTER TABLE "InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq" OWNER TO postgres;
 
 --
--- TOC entry 297 (class 1259 OID 38649)
+-- TOC entry 295 (class 1259 OID 38649)
 -- Name: CFDICOMPROBANTE_ID_COMPROBANTE_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2482,7 +3678,7 @@ CREATE SEQUENCE "InfUsuario"."CFDICOMPROBANTE_ID_COMPROBANTE_seq"
 ALTER TABLE "InfUsuario"."CFDICOMPROBANTE_ID_COMPROBANTE_seq" OWNER TO postgres;
 
 --
--- TOC entry 298 (class 1259 OID 38651)
+-- TOC entry 296 (class 1259 OID 38651)
 -- Name: CFDICOMPROBANTE; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2524,7 +3720,7 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTE" (
 ALTER TABLE "InfUsuario"."CFDICOMPROBANTE" OWNER TO postgres;
 
 --
--- TOC entry 338 (class 1259 OID 47143)
+-- TOC entry 321 (class 1259 OID 47143)
 -- Name: CFDICOMPROBANTECOMPLEMENTO; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2544,7 +3740,48 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" (
 ALTER TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTO" OWNER TO postgres;
 
 --
--- TOC entry 335 (class 1259 OID 47135)
+-- TOC entry 323 (class 1259 OID 47641)
+-- Name: CFDICOMPROBANTECOMPLEMENTOPAGOS; Type: TABLE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" (
+    "ID_PAGO" integer DEFAULT nextval('"InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGO_seq"'::regclass) NOT NULL,
+    "FECHAPAGO" timestamp without time zone,
+    "FORMADEPAGOP" character(2),
+    "MONEDAP" character(5),
+    "MONTO" double precision,
+    "RFCEMISORCTABEN" character(13),
+    "CTABENEFICIARIO" character(20),
+    "ID_COMPROBANTE" bigint
+);
+
+
+ALTER TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOS" OWNER TO postgres;
+
+--
+-- TOC entry 325 (class 1259 OID 47647)
+-- Name: CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS; Type: TABLE; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" (
+    "ID_PAGODOC" integer DEFAULT nextval('"InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGODOCS_seq"'::regclass) NOT NULL,
+    "IDDOCUMENTO" character(36),
+    "SERIE" character(25),
+    "FOLIO" character(40),
+    "MONEDADR" character(5),
+    "METODODEPAGODR" character(3),
+    "NUMPARCIALIDAD" character(5),
+    "IMPSALDOANT" double precision,
+    "IMPPAGADO" double precision,
+    "IMPSALDOINSOLUTO" double precision,
+    "ID_PAGO" bigint
+);
+
+
+ALTER TABLE "InfUsuario"."CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS" OWNER TO postgres;
+
+--
+-- TOC entry 318 (class 1259 OID 47135)
 -- Name: CFDIRETENIDOS_ID_RETENIDO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2559,7 +3796,7 @@ CREATE SEQUENCE "InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq"
 ALTER TABLE "InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq" OWNER TO postgres;
 
 --
--- TOC entry 336 (class 1259 OID 47137)
+-- TOC entry 319 (class 1259 OID 47137)
 -- Name: CFDICOMPROBANTEIMPUESTOSRETENIDOS; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2574,7 +3811,7 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTEIMPUESTOSRETENIDOS" (
 ALTER TABLE "InfUsuario"."CFDICOMPROBANTEIMPUESTOSRETENIDOS" OWNER TO postgres;
 
 --
--- TOC entry 299 (class 1259 OID 38658)
+-- TOC entry 297 (class 1259 OID 38658)
 -- Name: CFDITRASLADOS_ID_TRASLADO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2589,7 +3826,7 @@ CREATE SEQUENCE "InfUsuario"."CFDITRASLADOS_ID_TRASLADO_seq"
 ALTER TABLE "InfUsuario"."CFDITRASLADOS_ID_TRASLADO_seq" OWNER TO postgres;
 
 --
--- TOC entry 300 (class 1259 OID 38660)
+-- TOC entry 298 (class 1259 OID 38660)
 -- Name: CFDICOMPROBANTEIMPUESTOSTRASLADOS; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2606,7 +3843,7 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" (
 ALTER TABLE "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" OWNER TO postgres;
 
 --
--- TOC entry 301 (class 1259 OID 38664)
+-- TOC entry 299 (class 1259 OID 38664)
 -- Name: CFDICOMPROBANTERELACIONADOS; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2621,7 +3858,7 @@ CREATE TABLE "InfUsuario"."CFDICOMPROBANTERELACIONADOS" (
 ALTER TABLE "InfUsuario"."CFDICOMPROBANTERELACIONADOS" OWNER TO postgres;
 
 --
--- TOC entry 302 (class 1259 OID 38667)
+-- TOC entry 300 (class 1259 OID 38667)
 -- Name: CFDICONCEPTOS_ID_CONCEPTO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2636,7 +3873,7 @@ CREATE SEQUENCE "InfUsuario"."CFDICONCEPTOS_ID_CONCEPTO_seq"
 ALTER TABLE "InfUsuario"."CFDICONCEPTOS_ID_CONCEPTO_seq" OWNER TO postgres;
 
 --
--- TOC entry 303 (class 1259 OID 38669)
+-- TOC entry 301 (class 1259 OID 38669)
 -- Name: CFDICONCEPTOS; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2646,7 +3883,7 @@ CREATE TABLE "InfUsuario"."CFDICONCEPTOS" (
     "NOIDENTIFICACION" character(100),
     "CANTIDAD" double precision,
     "CLAVEUNIDAD" character(5),
-    "UNIDAD" character(10),
+    "UNIDAD" character(150),
     "DESCRIPCION" character(1000),
     "VALORUNITARIO" double precision,
     "IMPORTE" double precision,
@@ -2660,7 +3897,7 @@ CREATE TABLE "InfUsuario"."CFDICONCEPTOS" (
 ALTER TABLE "InfUsuario"."CFDICONCEPTOS" OWNER TO postgres;
 
 --
--- TOC entry 304 (class 1259 OID 38676)
+-- TOC entry 302 (class 1259 OID 38676)
 -- Name: CFDICONCEPTOSIMPUESTOSRETENCIONES; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2678,7 +3915,7 @@ CREATE TABLE "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" (
 ALTER TABLE "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" OWNER TO postgres;
 
 --
--- TOC entry 305 (class 1259 OID 38679)
+-- TOC entry 303 (class 1259 OID 38679)
 -- Name: CFDICONCEPTOSIMPUESTOSTRASLADOS; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2696,7 +3933,7 @@ CREATE TABLE "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" (
 ALTER TABLE "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" OWNER TO postgres;
 
 --
--- TOC entry 306 (class 1259 OID 38682)
+-- TOC entry 304 (class 1259 OID 38682)
 -- Name: CFDIPARTES_ID_PARTE_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2711,7 +3948,7 @@ CREATE SEQUENCE "InfUsuario"."CFDIPARTES_ID_PARTE_seq"
 ALTER TABLE "InfUsuario"."CFDIPARTES_ID_PARTE_seq" OWNER TO postgres;
 
 --
--- TOC entry 307 (class 1259 OID 38684)
+-- TOC entry 305 (class 1259 OID 38684)
 -- Name: CFDICONCEPTOSPARTES; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2732,7 +3969,7 @@ CREATE TABLE "InfUsuario"."CFDICONCEPTOSPARTES" (
 ALTER TABLE "InfUsuario"."CFDICONCEPTOSPARTES" OWNER TO postgres;
 
 --
--- TOC entry 308 (class 1259 OID 38691)
+-- TOC entry 306 (class 1259 OID 38691)
 -- Name: CFDIIMPUESTOS_ID_IMPUESTO_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2748,8 +3985,8 @@ CREATE SEQUENCE "InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq"
 ALTER TABLE "InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq" OWNER TO postgres;
 
 --
--- TOC entry 3724 (class 0 OID 0)
--- Dependencies: 308
+-- TOC entry 3715 (class 0 OID 0)
+-- Dependencies: 306
 -- Name: CFDIIMPUESTOS_ID_IMPUESTO_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2757,7 +3994,7 @@ ALTER SEQUENCE "InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq" OWNED BY "InfUsuario
 
 
 --
--- TOC entry 309 (class 1259 OID 38693)
+-- TOC entry 307 (class 1259 OID 38693)
 -- Name: CFDIRELACIONADOS_ID_RELACIONADOS_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2773,8 +4010,8 @@ CREATE SEQUENCE "InfUsuario"."CFDIRELACIONADOS_ID_RELACIONADOS_seq"
 ALTER TABLE "InfUsuario"."CFDIRELACIONADOS_ID_RELACIONADOS_seq" OWNER TO postgres;
 
 --
--- TOC entry 3725 (class 0 OID 0)
--- Dependencies: 309
+-- TOC entry 3716 (class 0 OID 0)
+-- Dependencies: 307
 -- Name: CFDIRELACIONADOS_ID_RELACIONADOS_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2782,7 +4019,7 @@ ALTER SEQUENCE "InfUsuario"."CFDIRELACIONADOS_ID_RELACIONADOS_seq" OWNED BY "Inf
 
 
 --
--- TOC entry 310 (class 1259 OID 38695)
+-- TOC entry 308 (class 1259 OID 38695)
 -- Name: CFDIRETENCIONES_ID_RETENCION_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2798,8 +4035,8 @@ CREATE SEQUENCE "InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq"
 ALTER TABLE "InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq" OWNER TO postgres;
 
 --
--- TOC entry 3726 (class 0 OID 0)
--- Dependencies: 310
+-- TOC entry 3717 (class 0 OID 0)
+-- Dependencies: 308
 -- Name: CFDIRETENCIONES_ID_RETENCION_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2807,21 +4044,21 @@ ALTER SEQUENCE "InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq" OWNED BY "InfUsua
 
 
 --
--- TOC entry 311 (class 1259 OID 38697)
+-- TOC entry 309 (class 1259 OID 38697)
 -- Name: CFDITOTAL; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
 CREATE TABLE "InfUsuario"."CFDITOTAL" (
     "ID_CFDI" integer NOT NULL,
-    "TEXTOCFDI" xml,
-    "CVE_DESCARGA" character(15)
+    "ERROR" text,
+    "UUID" character(150)
 );
 
 
 ALTER TABLE "InfUsuario"."CFDITOTAL" OWNER TO postgres;
 
 --
--- TOC entry 312 (class 1259 OID 38703)
+-- TOC entry 310 (class 1259 OID 38703)
 -- Name: CFDITOTAL_ID_CFDI_seq; Type: SEQUENCE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2837,8 +4074,8 @@ CREATE SEQUENCE "InfUsuario"."CFDITOTAL_ID_CFDI_seq"
 ALTER TABLE "InfUsuario"."CFDITOTAL_ID_CFDI_seq" OWNER TO postgres;
 
 --
--- TOC entry 3727 (class 0 OID 0)
--- Dependencies: 312
+-- TOC entry 3718 (class 0 OID 0)
+-- Dependencies: 310
 -- Name: CFDITOTAL_ID_CFDI_seq; Type: SEQUENCE OWNED BY; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2846,7 +4083,7 @@ ALTER SEQUENCE "InfUsuario"."CFDITOTAL_ID_CFDI_seq" OWNED BY "InfUsuario"."CFDIT
 
 
 --
--- TOC entry 313 (class 1259 OID 38705)
+-- TOC entry 334 (class 1259 OID 60030)
 -- Name: CFDIVALIDADOS69Y69B; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
 --
 
@@ -2865,469 +4102,19 @@ CREATE MATERIALIZED VIEW "InfUsuario"."CFDIVALIDADOS69Y69B" AS
             ELSE 0
         END AS "OBSERVABLE69B"
    FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
+     JOIN "BaseSistema"."LOGCARGAXML" th ON (((((th."ID_CARGAXML")::character varying)::bpchar = ta."CVE_DESCARGA") AND (th."STATUS" = 36) AND (th."STATUSPERIODO" = 38))))
+     JOIN "BaseSistema"."LOGDESCARGAWSPROCESO" pr ON (((pr."CVE_DESCARGA" = th."CVE_DESCARGA") AND (pr."STATUS" = 31))))
+     JOIN "BaseSistema"."CFGCLTESRFC" td ON (((td."ID_RFC" = pr."ID_RFC") AND (td."STATUS" = 5))))
+     JOIN "BaseSistema"."CFGCLTES" te ON (((te."ID_CLTE" = td."ID_CLTE") AND (te."STATUS" = 3))))
      LEFT JOIN "BaseSistema"."PROVEEDORES69" tf ON ((tf."RFC" = ta."RFCRECEPTOR")))
      LEFT JOIN "BaseSistema"."PROVEEDORES69B" tg ON ((tg."RFC" = ta."RFCRECEPTOR")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
   WITH NO DATA;
 
 
 ALTER TABLE "InfUsuario"."CFDIVALIDADOS69Y69B" OWNER TO postgres;
 
 --
--- TOC entry 314 (class 1259 OID 38710)
--- Name: DET_IVA_ACREDITABLE_APLIC_ANTICIPOS; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_APLIC_ANTICIPOS" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCRECEPTOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    tf."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" tf ON ((tf."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'I'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (tf."TIPORELACION" = '07'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_ACREDITABLE_APLIC_ANTICIPOS" OWNER TO postgres;
-
---
--- TOC entry 315 (class 1259 OID 38715)
--- Name: DET_IVA_ACREDITABLE_DEVOLUCIONES; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DEVOLUCIONES" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCRECEPTOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (th."TIPORELACION" = '03'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_ACREDITABLE_DEVOLUCIONES" OWNER TO postgres;
-
---
--- TOC entry 316 (class 1259 OID 38720)
--- Name: DET_IVA_ACREDITABLE_DISMINUCION_APLIC_ANTICIPOS; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_APLIC_ANTICIPOS" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCRECEPTOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    ti."CLAVEPRODSERV",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM ((((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" ti ON ((ti."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = '30'::bpchar) AND (th."TIPORELACION" = '07'::bpchar) AND (ti."CLAVEPRODSERV" = '84111506'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_APLIC_ANTICIPOS" OWNER TO postgres;
-
---
--- TOC entry 317 (class 1259 OID 38725)
--- Name: DET_IVA_ACREDITABLE_DISMINUCION_NC; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_NC" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCRECEPTOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (th."TIPORELACION" = '01'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_ACREDITABLE_DISMINUCION_NC" OWNER TO postgres;
-
---
--- TOC entry 318 (class 1259 OID 38730)
--- Name: DET_IVA_ACREDITABLE_NOTAS_DEBITO; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_NOTAS_DEBITO" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCRECEPTOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (th."TIPORELACION" = '02'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_ACREDITABLE_NOTAS_DEBITO" OWNER TO postgres;
-
---
--- TOC entry 319 (class 1259 OID 38735)
--- Name: DET_IVA_ACREDITABLE_PAGOS_CONTADO; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_PAGOS_CONTADO" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCRECEPTOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    tf."CLAVEPRODSERV",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" tf ON ((tf."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" tg ON ((tg."ID_CONCEPTO" = tf."ID_CONCEPTO")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'I'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (tf."CLAVEPRODSERV" <> '84111506'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_ACREDITABLE_PAGOS_CONTADO" OWNER TO postgres;
-
---
--- TOC entry 320 (class 1259 OID 38740)
--- Name: DET_IVA_ACREDITABLE_PAGO_ANTICIPO; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_ACREDITABLE_PAGO_ANTICIPO" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCRECEPTOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    tf."CLAVEPRODSERV",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" tf ON ((tf."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" tg ON ((tg."ID_CONCEPTO" = tf."ID_CONCEPTO")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'I'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (tf."CLAVEPRODSERV" = '84111506'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_ACREDITABLE_PAGO_ANTICIPO" OWNER TO postgres;
-
---
--- TOC entry 321 (class 1259 OID 38745)
--- Name: DET_IVA_TRASLADADO_ANTICIPOS; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_ANTICIPOS" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCEMISOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    tf."CLAVEPRODSERV",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" tf ON ((tf."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" tg ON ((tg."ID_CONCEPTO" = tf."ID_CONCEPTO")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'I'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (tf."CLAVEPRODSERV" = '84111506'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_TRASLADADO_ANTICIPOS" OWNER TO postgres;
-
---
--- TOC entry 322 (class 1259 OID 38750)
--- Name: DET_IVA_TRASLADADO_APLIC_ANTICIPOS; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_APLIC_ANTICIPOS" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCEMISOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    tf."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" tf ON ((tf."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'I'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (tf."TIPORELACION" = '07'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_TRASLADADO_APLIC_ANTICIPOS" OWNER TO postgres;
-
---
--- TOC entry 323 (class 1259 OID 38755)
--- Name: DET_IVA_TRASLADADO_DEVOLUCIONES; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_DEVOLUCIONES" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCEMISOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (th."TIPORELACION" = '03'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_TRASLADADO_DEVOLUCIONES" OWNER TO postgres;
-
---
--- TOC entry 324 (class 1259 OID 38760)
--- Name: DET_IVA_TRASLADADO_EGRESO_APLIC_ANTICIPOS; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_APLIC_ANTICIPOS" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCEMISOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    ti."CLAVEPRODSERV",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM ((((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" ti ON ((ti."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = '30'::bpchar) AND (th."TIPORELACION" = '07'::bpchar) AND (ti."CLAVEPRODSERV" = '84111506'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_APLIC_ANTICIPOS" OWNER TO postgres;
-
---
--- TOC entry 325 (class 1259 OID 38765)
--- Name: DET_IVA_TRASLADADO_EGRESO_DESCUENTOS_NC; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_DESCUENTOS_NC" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCEMISOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (th."TIPORELACION" = '01'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_TRASLADADO_EGRESO_DESCUENTOS_NC" OWNER TO postgres;
-
---
--- TOC entry 326 (class 1259 OID 38770)
--- Name: DET_IVA_TRASLADADO_NOTAS_DEBITO; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_NOTAS_DEBITO" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCEMISOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    th."TIPORELACION",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTEIMPUESTOSTRASLADOS" tg ON ((tg."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICOMPROBANTERELACIONADOS" th ON ((th."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'E'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (th."TIPORELACION" = '02'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_TRASLADADO_NOTAS_DEBITO" OWNER TO postgres;
-
---
--- TOC entry 327 (class 1259 OID 38775)
--- Name: DET_IVA_TRASLADADO_VTAS_CONTADO; Type: MATERIALIZED VIEW; Schema: InfUsuario; Owner: postgres
---
-
-CREATE MATERIALIZED VIEW "InfUsuario"."DET_IVA_TRASLADADO_VTAS_CONTADO" AS
- SELECT te."RFC" AS "RFC_CLTE",
-    td."RFC" AS "RFC_ASOC",
-    ta."RFCEMISOR",
-    ta."TIPODECOMPROBANTE",
-    ta."METODOPAGO",
-    ta."FORMAPAGO",
-    tf."CLAVEPRODSERV",
-    tg."IMPUESTO",
-    tg."IMPORTE"
-   FROM (((((("InfUsuario"."CFDICOMPROBANTE" ta
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOS" tf ON ((tf."ID_COMPROBANTE" = ta."ID_COMPROBANTE")))
-     LEFT JOIN "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" tg ON ((tg."ID_CONCEPTO" = tf."ID_CONCEPTO")))
-     LEFT JOIN "InfUsuario"."CFDITOTAL" tb ON ((tb."ID_CFDI" = ta."ID_CFDI")))
-     LEFT JOIN "BaseSistema"."LOGDESCARGAFILE" tc ON ((tc."CVE_DESCARGA" = tb."CVE_DESCARGA")))
-     LEFT JOIN "BaseSistema"."CFGCLTESRFC" td ON ((td."ID_RFC" = tc."ID_RFC")))
-     LEFT JOIN "BaseSistema"."CFGCLTES" te ON ((te."ID_CLTE" = td."ID_CLTE")))
-  WHERE (
-        CASE
-            WHEN ((ta."TIPODECOMPROBANTE" = 'I'::bpchar) AND (ta."METODOPAGO" = 'PUE'::bpchar) AND (ta."FORMAPAGO" = ANY (ARRAY['01'::bpchar, '02'::bpchar, '03'::bpchar, '04'::bpchar, '05'::bpchar, '06'::bpchar, '08'::bpchar, '28'::bpchar, '29'::bpchar])) AND (tf."CLAVEPRODSERV" <> '84111506'::bpchar) AND (tg."IMPUESTO" = '002'::bpchar)) THEN 1
-            ELSE 0
-        END = 1)
-  WITH NO DATA;
-
-
-ALTER TABLE "InfUsuario"."DET_IVA_TRASLADADO_VTAS_CONTADO" OWNER TO postgres;
-
---
--- TOC entry 328 (class 1259 OID 38780)
+-- TOC entry 311 (class 1259 OID 38780)
 -- Name: INF32D; Type: TABLE; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3341,7 +4128,7 @@ CREATE TABLE "InfUsuario"."INF32D" (
 ALTER TABLE "InfUsuario"."INF32D" OWNER TO postgres;
 
 --
--- TOC entry 3378 (class 2604 OID 38897)
+-- TOC entry 3371 (class 2604 OID 38897)
 -- Name: CATACCIONES ID_ACCION; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
 --
 
@@ -3349,7 +4136,7 @@ ALTER TABLE ONLY "BaseSistema"."CATACCIONES" ALTER COLUMN "ID_ACCION" SET DEFAUL
 
 
 --
--- TOC entry 3381 (class 2604 OID 38898)
+-- TOC entry 3374 (class 2604 OID 38898)
 -- Name: CATSTATUS ID_STATUS; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
 --
 
@@ -3357,7 +4144,15 @@ ALTER TABLE ONLY "BaseSistema"."CATSTATUS" ALTER COLUMN "ID_STATUS" SET DEFAULT 
 
 
 --
--- TOC entry 3387 (class 2604 OID 38900)
+-- TOC entry 3449 (class 2604 OID 57359)
+-- Name: CFGPERIODOS ID_PERIODO; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
+--
+
+ALTER TABLE ONLY "BaseSistema"."CFGPERIODOS" ALTER COLUMN "ID_PERIODO" SET DEFAULT nextval('"BaseSistema"."CFGPERIODOS_ID_PERIODO_seq"'::regclass);
+
+
+--
+-- TOC entry 3380 (class 2604 OID 38900)
 -- Name: LOGDESCARGAFILE ID_DESCARGA; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
 --
 
@@ -3365,7 +4160,15 @@ ALTER TABLE ONLY "BaseSistema"."LOGDESCARGAFILE" ALTER COLUMN "ID_DESCARGA" SET 
 
 
 --
--- TOC entry 3442 (class 2604 OID 38902)
+-- TOC entry 3450 (class 2604 OID 57887)
+-- Name: SOLCONSULPER ID_CONSULTA; Type: DEFAULT; Schema: BaseSistema; Owner: postgres
+--
+
+ALTER TABLE ONLY "BaseSistema"."SOLCONSULPER" ALTER COLUMN "ID_CONSULTA" SET DEFAULT nextval('"BaseSistema"."SOLCONSULPER_ID_CONSULTA_seq"'::regclass);
+
+
+--
+-- TOC entry 3435 (class 2604 OID 38902)
 -- Name: CFDICOMPROBANTERELACIONADOS ID_RELACIONADOS; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3373,7 +4176,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDICOMPROBANTERELACIONADOS" ALTER COLUMN "ID_REL
 
 
 --
--- TOC entry 3444 (class 2604 OID 38903)
+-- TOC entry 3437 (class 2604 OID 38903)
 -- Name: CFDICONCEPTOSIMPUESTOSRETENCIONES ID_RETENCION; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3381,7 +4184,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDICONCEPTOSIMPUESTOSRETENCIONES" ALTER COLUMN "
 
 
 --
--- TOC entry 3445 (class 2604 OID 38904)
+-- TOC entry 3438 (class 2604 OID 38904)
 -- Name: CFDICONCEPTOSIMPUESTOSTRASLADOS ID_IMPUESTO; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3389,7 +4192,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" ALTER COLUMN "ID
 
 
 --
--- TOC entry 3447 (class 2604 OID 38905)
+-- TOC entry 3440 (class 2604 OID 38905)
 -- Name: CFDITOTAL ID_CFDI; Type: DEFAULT; Schema: InfUsuario; Owner: postgres
 --
 
@@ -3397,7 +4200,7 @@ ALTER TABLE ONLY "InfUsuario"."CFDITOTAL" ALTER COLUMN "ID_CFDI" SET DEFAULT nex
 
 
 --
--- TOC entry 3593 (class 0 OID 38285)
+-- TOC entry 3586 (class 0 OID 38285)
 -- Dependencies: 213
 -- Data for Name: CATACCIONES; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3411,7 +4214,7 @@ INSERT INTO "BaseSistema"."CATACCIONES" VALUES (6, 'AUTORIZA                 ');
 
 
 --
--- TOC entry 3596 (class 0 OID 38292)
+-- TOC entry 3589 (class 0 OID 38292)
 -- Dependencies: 216
 -- Data for Name: CATPROCESOS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3427,10 +4230,13 @@ INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (8, 'RESPALDO                    
 INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (9, 'CARGA                         ');
 INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (10, 'DESCOMPRIME                   ');
 INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (11, 'DESCARGA WS                   ');
+INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (12, 'CARGA XML                     ');
+INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (13, 'PERIODO                       ');
+INSERT INTO "BaseSistema"."CATPROCESOS" VALUES (14, 'CONSULTA                      ');
 
 
 --
--- TOC entry 3598 (class 0 OID 38298)
+-- TOC entry 3591 (class 0 OID 38298)
 -- Dependencies: 218
 -- Data for Name: CATPROCESOSSTATUS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3450,7 +4256,7 @@ INSERT INTO "BaseSistema"."CATPROCESOSSTATUS" VALUES (12, 'FALLIDO             '
 
 
 --
--- TOC entry 3599 (class 0 OID 38302)
+-- TOC entry 3592 (class 0 OID 38302)
 -- Dependencies: 219
 -- Data for Name: CATSTATUS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3488,10 +4294,18 @@ INSERT INTO "BaseSistema"."CATSTATUS" VALUES (30, 11, 10);
 INSERT INTO "BaseSistema"."CATSTATUS" VALUES (31, 11, 11);
 INSERT INTO "BaseSistema"."CATSTATUS" VALUES (32, 11, 12);
 INSERT INTO "BaseSistema"."CATSTATUS" VALUES (33, 9, 12);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (34, 12, 6);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (35, 12, 4);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (36, 12, 5);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (37, 12, 12);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (38, 13, 1);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (39, 13, 2);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (40, 14, 4);
+INSERT INTO "BaseSistema"."CATSTATUS" VALUES (41, 14, 5);
 
 
 --
--- TOC entry 3603 (class 0 OID 38311)
+-- TOC entry 3596 (class 0 OID 38311)
 -- Dependencies: 223
 -- Data for Name: CFGCLTES; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3499,15 +4313,15 @@ INSERT INTO "BaseSistema"."CATSTATUS" VALUES (33, 9, 12);
 
 
 --
--- TOC entry 3705 (class 0 OID 45434)
--- Dependencies: 330
+-- TOC entry 3681 (class 0 OID 45434)
+-- Dependencies: 313
 -- Data for Name: CFGCLTESCREDENCIALES; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3604 (class 0 OID 38326)
+-- TOC entry 3597 (class 0 OID 38326)
 -- Dependencies: 224
 -- Data for Name: CFGCLTESREPOSITORIOS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3516,7 +4330,7 @@ INSERT INTO "BaseSistema"."CFGCLTESREPOSITORIOS" VALUES (2, 'InfUsuario     ', '
 
 
 --
--- TOC entry 3606 (class 0 OID 38332)
+-- TOC entry 3599 (class 0 OID 38332)
 -- Dependencies: 226
 -- Data for Name: CFGCLTESRFC; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3524,7 +4338,7 @@ INSERT INTO "BaseSistema"."CFGCLTESREPOSITORIOS" VALUES (2, 'InfUsuario     ', '
 
 
 --
--- TOC entry 3608 (class 0 OID 38338)
+-- TOC entry 3601 (class 0 OID 38338)
 -- Dependencies: 228
 -- Data for Name: CFGFILE; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3548,7 +4362,7 @@ INSERT INTO "BaseSistema"."CFGFILE" VALUES (10, '69   ', 'LISTADO 69 - Retorno  
 
 
 --
--- TOC entry 3610 (class 0 OID 38347)
+-- TOC entry 3603 (class 0 OID 38347)
 -- Dependencies: 230
 -- Data for Name: CFGFILECOLUMNS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3562,7 +4376,6 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (15, 'número y fecha de ofici
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (1, 'rfc                                                                                                 ', '"RFC" character(13) COLLATE pg_catalog."default"                                                    ', NULL, NULL, NULL, NULL, 12, '"RFC"                                                                                               ', '"RFC"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (2, 'razÓn social                                                                                        ', '"RAZON_SOC" character(255) COLLATE pg_catalog."default"                                             ', NULL, NULL, NULL, NULL, 12, '"RAZON_SOC"                                                                                         ', 'TRIM(BOTH FROM "RAZON_SOC") AS "RAZON_SOC"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (3, 'tipo persona                                                                                        ', '"TPO_PERS" character(2) COLLATE pg_catalog."default"                                                ', NULL, NULL, NULL, NULL, 12, '"TPO_PERS"                                                                                          ', 'TRIM(BOTH FROM "TPO_PERS") AS "TPO_PERS"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ');
-INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (4, 'supuesto                                                                                            ', '"SUPUESTO" character(20) COLLATE pg_catalog."default"                                               ', NULL, NULL, NULL, NULL, 12, '"SUPUESTO"                                                                                          ', 'TRIM(BOTH FROM "SUPUESTO") AS "SUPUESTO"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (5, 'fechas de primera publicacion                                                                       ', '"FH_PRIM_PUB" character(30) COLLATE pg_catalog."default"                                            ', NULL, NULL, NULL, NULL, 12, '"FH_PRIM_PUB"                                                                                       ', 'to_date("FH_PRIM_PUB",''DD/MM/YYYY'') AS "FH_PRIM_PUB"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (6, 'monto                                                                                               ', '"MNTO" character(30) COLLATE pg_catalog."default"                                                   ', NULL, NULL, NULL, NULL, 12, '"MNTO"                                                                                              ', '"MNTO"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (7, 'fecha de publicación (con monto de acuerdo a la ley de transparencia                                ', '"FH_PUB" character(30) COLLATE pg_catalog."default"                                                 ', NULL, NULL, NULL, NULL, 12, '"FH_PUB"                                                                                            ', 'to_date("FH_PUB",''DD/MM/YYYY'') as "FH_PUB"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ');
@@ -3571,6 +4384,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (13, 'nombre del contribuyente
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (16, 'publicación página sat presuntos                                                                    ', '"FH_PUB_PRESUN_SAT" character(150) COLLATE pg_catalog."default"                                     ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_PRESUN_SAT"                                                                                 ', 'to_date("FH_PUB_PRESUN_SAT", ''DD/MM/YYYY'') AS "FH_PUB_PRESUN_SAT"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (17, 'número y fecha de oficio global de presunción.1                                                     ', '"FH_OFIC_GLO_PRESUN_DOF" character(150) COLLATE pg_catalog."default"                                ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_PRESUN_DOF"                                                                            ', 'TRIM(BOTH FROM "FH_OFIC_GLO_PRESUN_DOF") AS "FH_OFIC_GLO_PRESUN_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (18, 'publicación dof presuntos                                                                           ', '"FH_PUB_PRESUN_DOF" character(150) COLLATE pg_catalog."default"                                     ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_PRESUN_DOF"                                                                                 ', 'to_date("FH_PUB_PRESUN_DOF", ''DD/MM/YYYY'') AS "FH_PUB_PRESUN_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ');
+INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (4, 'supuesto                                                                                            ', '"SUPUESTO" character(50) COLLATE pg_catalog."default"                                               ', NULL, NULL, NULL, NULL, 12, '"SUPUESTO"                                                                                          ', 'TRIM(BOTH FROM "SUPUESTO") AS "SUPUESTO"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (20, 'número y fecha de oficio global de contribuyentes que desvirtuaron                                  ', '"FH_OFIC_GLO_DESV_SAT" character(150) COLLATE pg_catalog."default"                                  ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_DESV_SAT"                                                                              ', 'TRIM(BOTH FROM "FH_OFIC_GLO_DESV_SAT") AS "FH_OFIC_GLO_DESV_SAT"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (22, 'número y fecha de oficio global de definitivos                                                      ', '"FH_OFIC_GLO_DESV_DOF" character(150) COLLATE pg_catalog."default"                                  ', NULL, NULL, NULL, NULL, 12, '"FH_OFIC_GLO_DESV_DOF"                                                                              ', 'TRIM(BOTH FROM "FH_OFIC_GLO_DESV_DOF") AS "FH_OFIC_GLO_DESV_DOF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ');
 INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (23, 'publicación página sat definitivos                                                                  ', '"FH_PUB_SAT_DEF" character(150) COLLATE pg_catalog."default"                                        ', NULL, NULL, NULL, NULL, 12, '"FH_PUB_SAT_DEF"                                                                                    ', 'to_date("FH_PUB_SAT_DEF", ''DD/MM/YYYY'') AS "FH_PUB_SAT_DEF"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ');
@@ -3587,7 +4401,123 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3613 (class 0 OID 38356)
+-- TOC entry 3698 (class 0 OID 57356)
+-- Dependencies: 330
+-- Data for Name: CFGPERIODOS; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
+--
+
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (1, '201701', '2017-01-01 00:00:00', '2017-01-31 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (2, '201702', '2017-02-01 00:00:00', '2017-02-28 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (3, '201703', '2017-03-01 00:00:00', '2017-03-31 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (4, '201704', '2017-04-01 00:00:00', '2017-04-30 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (5, '201705', '2017-05-01 00:00:00', '2017-05-31 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (6, '201706', '2017-06-01 00:00:00', '2017-06-30 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (7, '201707', '2017-07-01 00:00:00', '2017-07-31 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (8, '201708', '2017-08-01 00:00:00', '2017-08-31 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (9, '201709', '2017-09-01 00:00:00', '2017-09-30 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (10, '201710', '2017-10-01 00:00:00', '2017-10-31 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (11, '201711', '2017-11-01 00:00:00', '2017-11-30 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (12, '201712', '2017-12-01 00:00:00', '2017-12-31 00:00:00', '2019-10-16 22:54:07.360075', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (13, '201801', '2018-01-01 00:00:00', '2018-01-31 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (14, '201802', '2018-02-01 00:00:00', '2018-02-28 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (15, '201803', '2018-03-01 00:00:00', '2018-03-31 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (16, '201804', '2018-04-01 00:00:00', '2018-04-30 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (17, '201805', '2018-05-01 00:00:00', '2018-05-31 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (18, '201806', '2018-06-01 00:00:00', '2018-06-30 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (19, '201807', '2018-07-01 00:00:00', '2018-07-31 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (20, '201808', '2018-08-01 00:00:00', '2018-08-31 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (21, '201809', '2018-09-01 00:00:00', '2018-09-30 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (22, '201810', '2018-10-01 00:00:00', '2018-10-31 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (23, '201811', '2018-11-01 00:00:00', '2018-11-30 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (24, '201812', '2018-12-01 00:00:00', '2018-12-31 00:00:00', '2019-10-16 22:59:06.340233', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (25, '201901', '2019-01-01 00:00:00', '2019-01-31 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (26, '201902', '2019-02-01 00:00:00', '2019-02-28 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (27, '201903', '2019-03-01 00:00:00', '2019-03-31 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (28, '201904', '2019-04-01 00:00:00', '2019-04-30 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (29, '201905', '2019-05-01 00:00:00', '2019-05-31 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (30, '201906', '2019-06-01 00:00:00', '2019-06-30 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (31, '201907', '2019-07-01 00:00:00', '2019-07-31 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (32, '201908', '2019-08-01 00:00:00', '2019-08-31 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (33, '201909', '2019-09-01 00:00:00', '2019-09-30 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (34, '201910', '2019-10-01 00:00:00', '2019-10-31 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (35, '201911', '2019-11-01 00:00:00', '2019-11-30 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (36, '201912', '2019-12-01 00:00:00', '2019-12-31 00:00:00', '2019-10-16 22:59:56.360848', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (37, '202001', '2020-01-01 00:00:00', '2020-01-31 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (38, '202002', '2020-02-01 00:00:00', '2020-02-29 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (39, '202003', '2020-03-01 00:00:00', '2020-03-31 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (40, '202004', '2020-04-01 00:00:00', '2020-04-30 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (41, '202005', '2020-05-01 00:00:00', '2020-05-31 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (42, '202006', '2020-06-01 00:00:00', '2020-06-30 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (43, '202007', '2020-07-01 00:00:00', '2020-07-31 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (44, '202008', '2020-08-01 00:00:00', '2020-08-31 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (45, '202009', '2020-09-01 00:00:00', '2020-09-30 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (46, '202010', '2020-10-01 00:00:00', '2020-10-31 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (47, '202011', '2020-11-01 00:00:00', '2020-11-30 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (48, '202012', '2020-12-01 00:00:00', '2020-12-31 00:00:00', '2019-10-16 23:00:16.909506', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (49, '202101', '2021-01-01 00:00:00', '2021-01-31 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (50, '202102', '2021-02-01 00:00:00', '2021-02-28 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (51, '202103', '2021-03-01 00:00:00', '2021-03-31 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (52, '202104', '2021-04-01 00:00:00', '2021-04-30 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (53, '202105', '2021-05-01 00:00:00', '2021-05-31 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (54, '202106', '2021-06-01 00:00:00', '2021-06-30 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (55, '202107', '2021-07-01 00:00:00', '2021-07-31 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (56, '202108', '2021-08-01 00:00:00', '2021-08-31 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (57, '202109', '2021-09-01 00:00:00', '2021-09-30 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (58, '202110', '2021-10-01 00:00:00', '2021-10-31 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (59, '202111', '2021-11-01 00:00:00', '2021-11-30 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (60, '202112', '2021-12-01 00:00:00', '2021-12-31 00:00:00', '2019-10-16 23:00:34.296907', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (61, '202201', '2022-01-01 00:00:00', '2022-01-31 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (62, '202202', '2022-02-01 00:00:00', '2022-02-28 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (63, '202203', '2022-03-01 00:00:00', '2022-03-31 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (64, '202204', '2022-04-01 00:00:00', '2022-04-30 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (65, '202205', '2022-05-01 00:00:00', '2022-05-31 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (66, '202206', '2022-06-01 00:00:00', '2022-06-30 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (67, '202207', '2022-07-01 00:00:00', '2022-07-31 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (68, '202208', '2022-08-01 00:00:00', '2022-08-31 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (69, '202209', '2022-09-01 00:00:00', '2022-09-30 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (70, '202210', '2022-10-01 00:00:00', '2022-10-31 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (71, '202211', '2022-11-01 00:00:00', '2022-11-30 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (72, '202212', '2022-12-01 00:00:00', '2022-12-31 00:00:00', '2019-10-16 23:00:48.160272', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (73, '202301', '2023-01-01 00:00:00', '2023-01-31 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (74, '202302', '2023-02-01 00:00:00', '2023-02-28 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (75, '202303', '2023-03-01 00:00:00', '2023-03-31 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (76, '202304', '2023-04-01 00:00:00', '2023-04-30 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (77, '202305', '2023-05-01 00:00:00', '2023-05-31 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (78, '202306', '2023-06-01 00:00:00', '2023-06-30 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (79, '202307', '2023-07-01 00:00:00', '2023-07-31 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (80, '202308', '2023-08-01 00:00:00', '2023-08-31 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (81, '202309', '2023-09-01 00:00:00', '2023-09-30 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (82, '202310', '2023-10-01 00:00:00', '2023-10-31 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (83, '202311', '2023-11-01 00:00:00', '2023-11-30 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (84, '202312', '2023-12-01 00:00:00', '2023-12-31 00:00:00', '2019-10-16 23:01:04.326018', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (85, '202401', '2024-01-01 00:00:00', '2024-01-31 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (86, '202402', '2024-02-01 00:00:00', '2024-02-29 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (87, '202403', '2024-03-01 00:00:00', '2024-03-31 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (88, '202404', '2024-04-01 00:00:00', '2024-04-30 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (89, '202405', '2024-05-01 00:00:00', '2024-05-31 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (90, '202406', '2024-06-01 00:00:00', '2024-06-30 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (91, '202407', '2024-07-01 00:00:00', '2024-07-31 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (92, '202408', '2024-08-01 00:00:00', '2024-08-31 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (93, '202409', '2024-09-01 00:00:00', '2024-09-30 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (94, '202410', '2024-10-01 00:00:00', '2024-10-31 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (95, '202411', '2024-11-01 00:00:00', '2024-11-30 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (96, '202412', '2024-12-01 00:00:00', '2024-12-31 00:00:00', '2019-10-16 23:01:30.303595', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (97, '202501', '2025-01-01 00:00:00', '2025-01-31 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (98, '202502', '2025-02-01 00:00:00', '2025-02-28 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (99, '202503', '2025-03-01 00:00:00', '2025-03-31 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (100, '202504', '2025-04-01 00:00:00', '2025-04-30 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (101, '202505', '2025-05-01 00:00:00', '2025-05-31 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (102, '202506', '2025-06-01 00:00:00', '2025-06-30 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (103, '202507', '2025-07-01 00:00:00', '2025-07-31 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (104, '202508', '2025-08-01 00:00:00', '2025-08-31 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (105, '202509', '2025-09-01 00:00:00', '2025-09-30 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (106, '202510', '2025-10-01 00:00:00', '2025-10-31 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (107, '202511', '2025-11-01 00:00:00', '2025-11-30 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+INSERT INTO "BaseSistema"."CFGPERIODOS" VALUES (108, '202512', '2025-12-01 00:00:00', '2025-12-31 00:00:00', '2019-10-16 23:01:44.486813', NULL, 0, NULL, 38);
+
+
+--
+-- TOC entry 3606 (class 0 OID 38356)
 -- Dependencies: 233
 -- Data for Name: INF69; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3595,7 +4525,7 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3614 (class 0 OID 38359)
+-- TOC entry 3607 (class 0 OID 38359)
 -- Dependencies: 234
 -- Data for Name: INF69B; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3603,7 +4533,15 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3611 (class 0 OID 38351)
+-- TOC entry 3696 (class 0 OID 53689)
+-- Dependencies: 328
+-- Data for Name: LOGCARGAXML; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 3604 (class 0 OID 38351)
 -- Dependencies: 231
 -- Data for Name: LOGDESCARGAFILE; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
@@ -3611,503 +4549,527 @@ INSERT INTO "BaseSistema"."CFGFILECOLUMNS" VALUES (21, 'publicación dof desvirt
 
 
 --
--- TOC entry 3707 (class 0 OID 45499)
--- Dependencies: 332
+-- TOC entry 3683 (class 0 OID 45499)
+-- Dependencies: 315
 -- Data for Name: LOGDESCARGAWSAUTH; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3709 (class 0 OID 45529)
--- Dependencies: 334
+-- TOC entry 3685 (class 0 OID 45529)
+-- Dependencies: 317
 -- Data for Name: LOGDESCARGAWSPROCESO; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3620 (class 0 OID 38401)
--- Dependencies: 243
+-- TOC entry 3700 (class 0 OID 57884)
+-- Dependencies: 332
+-- Data for Name: SOLCONSULPER; Type: TABLE DATA; Schema: BaseSistema; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 3612 (class 0 OID 38401)
+-- Dependencies: 242
 -- Data for Name: INF69B_y2019m09; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3621 (class 0 OID 38408)
--- Dependencies: 244
+-- TOC entry 3613 (class 0 OID 38408)
+-- Dependencies: 243
 -- Data for Name: INF69B_y2019m10; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3622 (class 0 OID 38415)
--- Dependencies: 245
+-- TOC entry 3614 (class 0 OID 38415)
+-- Dependencies: 244
 -- Data for Name: INF69B_y2019m11; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3623 (class 0 OID 38422)
--- Dependencies: 246
+-- TOC entry 3615 (class 0 OID 38422)
+-- Dependencies: 245
 -- Data for Name: INF69B_y2019m12; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3624 (class 0 OID 38429)
--- Dependencies: 247
+-- TOC entry 3616 (class 0 OID 38429)
+-- Dependencies: 246
 -- Data for Name: INF69B_y2020m01; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3625 (class 0 OID 38436)
--- Dependencies: 248
+-- TOC entry 3617 (class 0 OID 38436)
+-- Dependencies: 247
 -- Data for Name: INF69B_y2020m02; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3626 (class 0 OID 38443)
--- Dependencies: 249
+-- TOC entry 3618 (class 0 OID 38443)
+-- Dependencies: 248
 -- Data for Name: INF69B_y2020m03; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3627 (class 0 OID 38450)
--- Dependencies: 250
+-- TOC entry 3619 (class 0 OID 38450)
+-- Dependencies: 249
 -- Data for Name: INF69B_y2020m04; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3628 (class 0 OID 38457)
--- Dependencies: 251
+-- TOC entry 3620 (class 0 OID 38457)
+-- Dependencies: 250
 -- Data for Name: INF69B_y2020m05; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3629 (class 0 OID 38464)
--- Dependencies: 252
+-- TOC entry 3621 (class 0 OID 38464)
+-- Dependencies: 251
 -- Data for Name: INF69B_y2020m06; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3630 (class 0 OID 38471)
--- Dependencies: 253
+-- TOC entry 3622 (class 0 OID 38471)
+-- Dependencies: 252
 -- Data for Name: INF69B_y2020m07; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3631 (class 0 OID 38478)
--- Dependencies: 254
+-- TOC entry 3623 (class 0 OID 38478)
+-- Dependencies: 253
 -- Data for Name: INF69B_y2020m08; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3632 (class 0 OID 38485)
--- Dependencies: 255
+-- TOC entry 3624 (class 0 OID 38485)
+-- Dependencies: 254
 -- Data for Name: INF69_y2019m09; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3633 (class 0 OID 38489)
--- Dependencies: 256
+-- TOC entry 3625 (class 0 OID 38489)
+-- Dependencies: 255
 -- Data for Name: INF69_y2019m10; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3634 (class 0 OID 38493)
--- Dependencies: 257
+-- TOC entry 3626 (class 0 OID 38493)
+-- Dependencies: 256
 -- Data for Name: INF69_y2019m11; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3635 (class 0 OID 38497)
--- Dependencies: 258
+-- TOC entry 3627 (class 0 OID 38497)
+-- Dependencies: 257
 -- Data for Name: INF69_y2019m12; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3636 (class 0 OID 38501)
--- Dependencies: 259
+-- TOC entry 3628 (class 0 OID 38501)
+-- Dependencies: 258
 -- Data for Name: INF69_y2020m01; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3637 (class 0 OID 38505)
--- Dependencies: 260
+-- TOC entry 3629 (class 0 OID 38505)
+-- Dependencies: 259
 -- Data for Name: INF69_y2020m02; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3638 (class 0 OID 38509)
--- Dependencies: 261
+-- TOC entry 3630 (class 0 OID 38509)
+-- Dependencies: 260
 -- Data for Name: INF69_y2020m03; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3639 (class 0 OID 38513)
--- Dependencies: 262
+-- TOC entry 3631 (class 0 OID 38513)
+-- Dependencies: 261
 -- Data for Name: INF69_y2020m04; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3640 (class 0 OID 38517)
--- Dependencies: 263
+-- TOC entry 3632 (class 0 OID 38517)
+-- Dependencies: 262
 -- Data for Name: INF69_y2020m05; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3641 (class 0 OID 38521)
--- Dependencies: 264
+-- TOC entry 3633 (class 0 OID 38521)
+-- Dependencies: 263
 -- Data for Name: INF69_y2020m06; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3642 (class 0 OID 38525)
--- Dependencies: 265
+-- TOC entry 3634 (class 0 OID 38525)
+-- Dependencies: 264
 -- Data for Name: INF69_y2020m07; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3643 (class 0 OID 38529)
--- Dependencies: 266
+-- TOC entry 3635 (class 0 OID 38529)
+-- Dependencies: 265
 -- Data for Name: INF69_y2020m08; Type: TABLE DATA; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3645 (class 0 OID 38539)
--- Dependencies: 269
+-- TOC entry 3637 (class 0 OID 38539)
+-- Dependencies: 268
 -- Data for Name: INF32D_y2019m09; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3646 (class 0 OID 38543)
--- Dependencies: 270
+-- TOC entry 3638 (class 0 OID 38543)
+-- Dependencies: 269
 -- Data for Name: INF32D_y2019m10; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3647 (class 0 OID 38547)
--- Dependencies: 271
+-- TOC entry 3639 (class 0 OID 38547)
+-- Dependencies: 270
 -- Data for Name: INF32D_y2019m11; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3648 (class 0 OID 38551)
--- Dependencies: 272
+-- TOC entry 3640 (class 0 OID 38551)
+-- Dependencies: 271
 -- Data for Name: INF32D_y2019m12; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3649 (class 0 OID 38555)
--- Dependencies: 273
+-- TOC entry 3641 (class 0 OID 38555)
+-- Dependencies: 272
 -- Data for Name: INF32D_y2020m01; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3650 (class 0 OID 38559)
--- Dependencies: 274
+-- TOC entry 3642 (class 0 OID 38559)
+-- Dependencies: 273
 -- Data for Name: INF32D_y2020m02; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3651 (class 0 OID 38563)
--- Dependencies: 275
+-- TOC entry 3643 (class 0 OID 38563)
+-- Dependencies: 274
 -- Data for Name: INF32D_y2020m03; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3652 (class 0 OID 38567)
--- Dependencies: 276
+-- TOC entry 3644 (class 0 OID 38567)
+-- Dependencies: 275
 -- Data for Name: INF32D_y2020m04; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3653 (class 0 OID 38571)
--- Dependencies: 277
+-- TOC entry 3645 (class 0 OID 38571)
+-- Dependencies: 276
 -- Data for Name: INF32D_y2020m05; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3654 (class 0 OID 38575)
--- Dependencies: 278
+-- TOC entry 3646 (class 0 OID 38575)
+-- Dependencies: 277
 -- Data for Name: INF32D_y2020m06; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3655 (class 0 OID 38579)
--- Dependencies: 279
+-- TOC entry 3647 (class 0 OID 38579)
+-- Dependencies: 278
 -- Data for Name: INF32D_y2020m07; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3656 (class 0 OID 38583)
--- Dependencies: 280
+-- TOC entry 3648 (class 0 OID 38583)
+-- Dependencies: 279
 -- Data for Name: INF32D_y2020m08; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3658 (class 0 OID 38593)
--- Dependencies: 283
+-- TOC entry 3650 (class 0 OID 38593)
+-- Dependencies: 282
 -- Data for Name: INFMETA_y2019m09; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3659 (class 0 OID 38597)
--- Dependencies: 284
+-- TOC entry 3651 (class 0 OID 38597)
+-- Dependencies: 283
 -- Data for Name: INFMETA_y2019m10; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3660 (class 0 OID 38601)
--- Dependencies: 285
+-- TOC entry 3652 (class 0 OID 38601)
+-- Dependencies: 284
 -- Data for Name: INFMETA_y2019m11; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3661 (class 0 OID 38605)
--- Dependencies: 286
+-- TOC entry 3653 (class 0 OID 38605)
+-- Dependencies: 285
 -- Data for Name: INFMETA_y2019m12; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3662 (class 0 OID 38609)
--- Dependencies: 287
+-- TOC entry 3654 (class 0 OID 38609)
+-- Dependencies: 286
 -- Data for Name: INFMETA_y2020m01; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3663 (class 0 OID 38613)
--- Dependencies: 288
+-- TOC entry 3655 (class 0 OID 38613)
+-- Dependencies: 287
 -- Data for Name: INFMETA_y2020m02; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3664 (class 0 OID 38617)
--- Dependencies: 289
+-- TOC entry 3656 (class 0 OID 38617)
+-- Dependencies: 288
 -- Data for Name: INFMETA_y2020m03; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3665 (class 0 OID 38621)
--- Dependencies: 290
+-- TOC entry 3657 (class 0 OID 38621)
+-- Dependencies: 289
 -- Data for Name: INFMETA_y2020m04; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3666 (class 0 OID 38625)
--- Dependencies: 291
+-- TOC entry 3658 (class 0 OID 38625)
+-- Dependencies: 290
 -- Data for Name: INFMETA_y2020m05; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3667 (class 0 OID 38629)
--- Dependencies: 292
+-- TOC entry 3659 (class 0 OID 38629)
+-- Dependencies: 291
 -- Data for Name: INFMETA_y2020m06; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3668 (class 0 OID 38633)
--- Dependencies: 293
+-- TOC entry 3660 (class 0 OID 38633)
+-- Dependencies: 292
 -- Data for Name: INFMETA_y2020m07; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3669 (class 0 OID 38637)
--- Dependencies: 294
+-- TOC entry 3661 (class 0 OID 38637)
+-- Dependencies: 293
 -- Data for Name: INFMETA_y2020m08; Type: TABLE DATA; Schema: InfHistorica; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3673 (class 0 OID 38651)
--- Dependencies: 298
+-- TOC entry 3664 (class 0 OID 38651)
+-- Dependencies: 296
 -- Data for Name: CFDICOMPROBANTE; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3713 (class 0 OID 47143)
--- Dependencies: 338
+-- TOC entry 3689 (class 0 OID 47143)
+-- Dependencies: 321
 -- Data for Name: CFDICOMPROBANTECOMPLEMENTO; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3711 (class 0 OID 47137)
--- Dependencies: 336
+-- TOC entry 3691 (class 0 OID 47641)
+-- Dependencies: 323
+-- Data for Name: CFDICOMPROBANTECOMPLEMENTOPAGOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 3693 (class 0 OID 47647)
+-- Dependencies: 325
+-- Data for Name: CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 3687 (class 0 OID 47137)
+-- Dependencies: 319
 -- Data for Name: CFDICOMPROBANTEIMPUESTOSRETENIDOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3675 (class 0 OID 38660)
--- Dependencies: 300
+-- TOC entry 3666 (class 0 OID 38660)
+-- Dependencies: 298
 -- Data for Name: CFDICOMPROBANTEIMPUESTOSTRASLADOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3676 (class 0 OID 38664)
--- Dependencies: 301
+-- TOC entry 3667 (class 0 OID 38664)
+-- Dependencies: 299
 -- Data for Name: CFDICOMPROBANTERELACIONADOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3678 (class 0 OID 38669)
--- Dependencies: 303
+-- TOC entry 3669 (class 0 OID 38669)
+-- Dependencies: 301
 -- Data for Name: CFDICONCEPTOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3679 (class 0 OID 38676)
--- Dependencies: 304
+-- TOC entry 3670 (class 0 OID 38676)
+-- Dependencies: 302
 -- Data for Name: CFDICONCEPTOSIMPUESTOSRETENCIONES; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3680 (class 0 OID 38679)
--- Dependencies: 305
+-- TOC entry 3671 (class 0 OID 38679)
+-- Dependencies: 303
 -- Data for Name: CFDICONCEPTOSIMPUESTOSTRASLADOS; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3682 (class 0 OID 38684)
--- Dependencies: 307
+-- TOC entry 3673 (class 0 OID 38684)
+-- Dependencies: 305
 -- Data for Name: CFDICONCEPTOSPARTES; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3686 (class 0 OID 38697)
--- Dependencies: 311
+-- TOC entry 3677 (class 0 OID 38697)
+-- Dependencies: 309
 -- Data for Name: CFDITOTAL; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3703 (class 0 OID 38780)
--- Dependencies: 328
+-- TOC entry 3679 (class 0 OID 38780)
+-- Dependencies: 311
 -- Data for Name: INF32D; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3670 (class 0 OID 38641)
--- Dependencies: 295
+-- TOC entry 3662 (class 0 OID 38641)
+-- Dependencies: 294
 -- Data for Name: INFMETA; Type: TABLE DATA; Schema: InfUsuario; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3728 (class 0 OID 0)
+-- TOC entry 3719 (class 0 OID 0)
 -- Dependencies: 214
 -- Name: CATACCIONES_ID_ACCION_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4116,7 +5078,7 @@ SELECT pg_catalog.setval('"BaseSistema"."CATACCIONES_ID_ACCION_seq"', 1, true);
 
 
 --
--- TOC entry 3729 (class 0 OID 0)
+-- TOC entry 3720 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: CATPROCESOSSTATUS_ID_STATUS_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4125,25 +5087,25 @@ SELECT pg_catalog.setval('"BaseSistema"."CATPROCESOSSTATUS_ID_STATUS_seq"', 1, f
 
 
 --
--- TOC entry 3730 (class 0 OID 0)
+-- TOC entry 3721 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: CATPROCESOS_ID_PROCESO_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CATPROCESOS_ID_PROCESO_seq"', 1, false);
+SELECT pg_catalog.setval('"BaseSistema"."CATPROCESOS_ID_PROCESO_seq"', 14, true);
 
 
 --
--- TOC entry 3731 (class 0 OID 0)
+-- TOC entry 3722 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: CATSTATUS_ID_STATUS_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CATSTATUS_ID_STATUS_seq"', 1, true);
+SELECT pg_catalog.setval('"BaseSistema"."CATSTATUS_ID_STATUS_seq"', 41, true);
 
 
 --
--- TOC entry 3732 (class 0 OID 0)
+-- TOC entry 3723 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: CFGALMACEN_ID_ALMACEN_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4152,16 +5114,16 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGALMACEN_ID_ALMACEN_seq"', 1, false);
 
 
 --
--- TOC entry 3733 (class 0 OID 0)
--- Dependencies: 329
+-- TOC entry 3724 (class 0 OID 0)
+-- Dependencies: 312
 -- Name: CFGCLTESCREDENCIALES_ID_CRED_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CFGCLTESCREDENCIALES_ID_CRED_seq"', 1, true);
+SELECT pg_catalog.setval('"BaseSistema"."CFGCLTESCREDENCIALES_ID_CRED_seq"', 3, true);
 
 
 --
--- TOC entry 3734 (class 0 OID 0)
+-- TOC entry 3725 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: CFGFILECOLUMNS_ID_COLUMN_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4170,16 +5132,16 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGFILECOLUMNS_ID_COLUMN_seq"', 1, fals
 
 
 --
--- TOC entry 3735 (class 0 OID 0)
+-- TOC entry 3726 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: CFGFILEUNLOADS_ID_UNLOAD_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"', 207, true);
+SELECT pg_catalog.setval('"BaseSistema"."CFGFILEUNLOADS_ID_UNLOAD_seq"', 40, true);
 
 
 --
--- TOC entry 3736 (class 0 OID 0)
+-- TOC entry 3727 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: CFGFILE_ID_FILE_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
@@ -4188,44 +5150,71 @@ SELECT pg_catalog.setval('"BaseSistema"."CFGFILE_ID_FILE_seq"', 1, false);
 
 
 --
--- TOC entry 3737 (class 0 OID 0)
+-- TOC entry 3728 (class 0 OID 0)
+-- Dependencies: 329
+-- Name: CFGPERIODOS_ID_PERIODO_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"BaseSistema"."CFGPERIODOS_ID_PERIODO_seq"', 108, true);
+
+
+--
+-- TOC entry 3729 (class 0 OID 0)
 -- Dependencies: 222
 -- Name: CLTES_ID_CLTE_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."CLTES_ID_CLTE_seq"', 1, false);
+SELECT pg_catalog.setval('"BaseSistema"."CLTES_ID_CLTE_seq"', 2, true);
 
 
 --
--- TOC entry 3738 (class 0 OID 0)
--- Dependencies: 331
+-- TOC entry 3730 (class 0 OID 0)
+-- Dependencies: 327
+-- Name: LOGCARGAXML_ID_CARGAXML_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"BaseSistema"."LOGCARGAXML_ID_CARGAXML_seq"', 524, true);
+
+
+--
+-- TOC entry 3731 (class 0 OID 0)
+-- Dependencies: 314
 -- Name: LOGDESCARGAWSCABECERA_ID_DESCARGA_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSCABECERA_ID_DESCARGA_seq"', 3, true);
+SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSCABECERA_ID_DESCARGA_seq"', 15, true);
 
 
 --
--- TOC entry 3739 (class 0 OID 0)
--- Dependencies: 333
+-- TOC entry 3732 (class 0 OID 0)
+-- Dependencies: 316
 -- Name: LOGDESCARGAWSPROCESO_ID_DESCARGA_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSPROCESO_ID_DESCARGA_seq"', 7, true);
+SELECT pg_catalog.setval('"BaseSistema"."LOGDESCARGAWSPROCESO_ID_DESCARGA_seq"', 33, true);
 
 
 --
--- TOC entry 3740 (class 0 OID 0)
+-- TOC entry 3733 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: RFCS_ID_RFC_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistema"."RFCS_ID_RFC_seq"', 1, false);
+SELECT pg_catalog.setval('"BaseSistema"."RFCS_ID_RFC_seq"', 1, true);
 
 
 --
--- TOC entry 3741 (class 0 OID 0)
--- Dependencies: 238
+-- TOC entry 3734 (class 0 OID 0)
+-- Dependencies: 331
+-- Name: SOLCONSULPER_ID_CONSULTA_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"BaseSistema"."SOLCONSULPER_ID_CONSULTA_seq"', 3, true);
+
+
+--
+-- TOC entry 3735 (class 0 OID 0)
+-- Dependencies: 237
 -- Name: USRSIST_ID_USR_seq; Type: SEQUENCE SET; Schema: BaseSistema; Owner: postgres
 --
 
@@ -4233,26 +5222,26 @@ SELECT pg_catalog.setval('"BaseSistema"."USRSIST_ID_USR_seq"', 1, false);
 
 
 --
--- TOC entry 3742 (class 0 OID 0)
--- Dependencies: 241
+-- TOC entry 3736 (class 0 OID 0)
+-- Dependencies: 240
 -- Name: INF69B_ID_INF_seq; Type: SEQUENCE SET; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69B_ID_INF_seq"', 10602, true);
+SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69B_ID_INF_seq"', 21037, true);
 
 
 --
--- TOC entry 3743 (class 0 OID 0)
--- Dependencies: 239
+-- TOC entry 3737 (class 0 OID 0)
+-- Dependencies: 238
 -- Name: INF69_ID_INF_seq; Type: SEQUENCE SET; Schema: BaseSistemaHistorico; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69_ID_INF_seq"', 468728, true);
+SELECT pg_catalog.setval('"BaseSistemaHistorico"."INF69_ID_INF_seq"', 800805, true);
 
 
 --
--- TOC entry 3744 (class 0 OID 0)
--- Dependencies: 267
+-- TOC entry 3738 (class 0 OID 0)
+-- Dependencies: 266
 -- Name: INF32D_ID_INF_seq; Type: SEQUENCE SET; Schema: InfHistorica; Owner: postgres
 --
 
@@ -4260,53 +5249,71 @@ SELECT pg_catalog.setval('"InfHistorica"."INF32D_ID_INF_seq"', 1, false);
 
 
 --
--- TOC entry 3745 (class 0 OID 0)
--- Dependencies: 281
+-- TOC entry 3739 (class 0 OID 0)
+-- Dependencies: 280
 -- Name: INFMETA_ID_INF_seq; Type: SEQUENCE SET; Schema: InfHistorica; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfHistorica"."INFMETA_ID_INF_seq"', 2, true);
+SELECT pg_catalog.setval('"InfHistorica"."INFMETA_ID_INF_seq"', 1664, true);
+
+
+--
+-- TOC entry 3740 (class 0 OID 0)
+-- Dependencies: 324
+-- Name: CFDICOMPLEMENTOSPAGOS_ID_PAGODOCS_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGODOCS_seq"', 15, true);
+
+
+--
+-- TOC entry 3741 (class 0 OID 0)
+-- Dependencies: 322
+-- Name: CFDICOMPLEMENTOSPAGOS_ID_PAGO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPLEMENTOSPAGOS_ID_PAGO_seq"', 14, true);
+
+
+--
+-- TOC entry 3742 (class 0 OID 0)
+-- Dependencies: 320
+-- Name: CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq"', 522, true);
+
+
+--
+-- TOC entry 3743 (class 0 OID 0)
+-- Dependencies: 295
+-- Name: CFDICOMPROBANTE_ID_COMPROBANTE_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPROBANTE_ID_COMPROBANTE_seq"', 522, true);
+
+
+--
+-- TOC entry 3744 (class 0 OID 0)
+-- Dependencies: 300
+-- Name: CFDICONCEPTOS_ID_CONCEPTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDICONCEPTOS_ID_CONCEPTO_seq"', 575, true);
+
+
+--
+-- TOC entry 3745 (class 0 OID 0)
+-- Dependencies: 306
+-- Name: CFDIIMPUESTOS_ID_IMPUESTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq"', 79, true);
 
 
 --
 -- TOC entry 3746 (class 0 OID 0)
--- Dependencies: 337
--- Name: CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
---
-
-SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPLEMENTOS_ID_COMPLEMENTO_seq"', 3, true);
-
-
---
--- TOC entry 3747 (class 0 OID 0)
--- Dependencies: 297
--- Name: CFDICOMPROBANTE_ID_COMPROBANTE_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
---
-
-SELECT pg_catalog.setval('"InfUsuario"."CFDICOMPROBANTE_ID_COMPROBANTE_seq"', 13, true);
-
-
---
--- TOC entry 3748 (class 0 OID 0)
--- Dependencies: 302
--- Name: CFDICONCEPTOS_ID_CONCEPTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
---
-
-SELECT pg_catalog.setval('"InfUsuario"."CFDICONCEPTOS_ID_CONCEPTO_seq"', 6, true);
-
-
---
--- TOC entry 3749 (class 0 OID 0)
--- Dependencies: 308
--- Name: CFDIIMPUESTOS_ID_IMPUESTO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
---
-
-SELECT pg_catalog.setval('"InfUsuario"."CFDIIMPUESTOS_ID_IMPUESTO_seq"', 1, false);
-
-
---
--- TOC entry 3750 (class 0 OID 0)
--- Dependencies: 306
+-- Dependencies: 304
 -- Name: CFDIPARTES_ID_PARTE_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
@@ -4314,8 +5321,8 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDIPARTES_ID_PARTE_seq"', 1, false);
 
 
 --
--- TOC entry 3751 (class 0 OID 0)
--- Dependencies: 309
+-- TOC entry 3747 (class 0 OID 0)
+-- Dependencies: 307
 -- Name: CFDIRELACIONADOS_ID_RELACIONADOS_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
@@ -4323,26 +5330,26 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDIRELACIONADOS_ID_RELACIONADOS_seq"', 
 
 
 --
--- TOC entry 3752 (class 0 OID 0)
--- Dependencies: 310
+-- TOC entry 3748 (class 0 OID 0)
+-- Dependencies: 308
 -- Name: CFDIRETENCIONES_ID_RETENCION_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq"', 5, true);
+SELECT pg_catalog.setval('"InfUsuario"."CFDIRETENCIONES_ID_RETENCION_seq"', 6, true);
 
 
 --
--- TOC entry 3753 (class 0 OID 0)
--- Dependencies: 335
+-- TOC entry 3749 (class 0 OID 0)
+-- Dependencies: 318
 -- Name: CFDIRETENIDOS_ID_RETENIDO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq"', 5, true);
+SELECT pg_catalog.setval('"InfUsuario"."CFDIRETENIDOS_ID_RETENIDO_seq"', 6, true);
 
 
 --
--- TOC entry 3754 (class 0 OID 0)
--- Dependencies: 312
+-- TOC entry 3750 (class 0 OID 0)
+-- Dependencies: 310
 -- Name: CFDITOTAL_ID_CFDI_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
@@ -4350,15 +5357,102 @@ SELECT pg_catalog.setval('"InfUsuario"."CFDITOTAL_ID_CFDI_seq"', 1, false);
 
 
 --
--- TOC entry 3755 (class 0 OID 0)
--- Dependencies: 299
+-- TOC entry 3751 (class 0 OID 0)
+-- Dependencies: 297
 -- Name: CFDITRASLADOS_ID_TRASLADO_seq; Type: SEQUENCE SET; Schema: InfUsuario; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"InfUsuario"."CFDITRASLADOS_ID_TRASLADO_seq"', 1, false);
+SELECT pg_catalog.setval('"InfUsuario"."CFDITRASLADOS_ID_TRASLADO_seq"', 41, true);
 
 
--- Completed on 2019-10-09 09:21:21 CDT
+--
+-- TOC entry 3457 (class 2606 OID 57361)
+-- Name: CFGPERIODOS CFGPERIODOS_pkey; Type: CONSTRAINT; Schema: BaseSistema; Owner: postgres
+--
+
+ALTER TABLE ONLY "BaseSistema"."CFGPERIODOS"
+    ADD CONSTRAINT "CFGPERIODOS_pkey" PRIMARY KEY ("ID_PERIODO");
+
+
+--
+-- TOC entry 3455 (class 2606 OID 53697)
+-- Name: LOGCARGAXML LOGCARGAXML_pkey; Type: CONSTRAINT; Schema: BaseSistema; Owner: postgres
+--
+
+ALTER TABLE ONLY "BaseSistema"."LOGCARGAXML"
+    ADD CONSTRAINT "LOGCARGAXML_pkey" PRIMARY KEY ("ID_CARGAXML");
+
+
+--
+-- TOC entry 3459 (class 2606 OID 57889)
+-- Name: SOLCONSULPER SOLCONSULPER_pkey; Type: CONSTRAINT; Schema: BaseSistema; Owner: postgres
+--
+
+ALTER TABLE ONLY "BaseSistema"."SOLCONSULPER"
+    ADD CONSTRAINT "SOLCONSULPER_pkey" PRIMARY KEY ("ID_CONSULTA");
+
+
+--
+-- TOC entry 3451 (class 1259 OID 50905)
+-- Name: IDX_CFDICOMPROBANTE_1; Type: INDEX; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE INDEX "IDX_CFDICOMPROBANTE_1" ON "InfUsuario"."CFDICOMPROBANTE" USING btree ("TIPODECOMPROBANTE", "METODOPAGO", "FORMAPAGO");
+
+
+--
+-- TOC entry 3453 (class 1259 OID 50913)
+-- Name: IDX_CFDICONCEPTOSIMPUESTOSTRASLADADOS_1; Type: INDEX; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE INDEX "IDX_CFDICONCEPTOSIMPUESTOSTRASLADADOS_1" ON "InfUsuario"."CFDICONCEPTOSIMPUESTOSTRASLADOS" USING btree ("IMPUESTO");
+
+
+--
+-- TOC entry 3452 (class 1259 OID 50912)
+-- Name: IDX_CFDICONCEPTOS_1; Type: INDEX; Schema: InfUsuario; Owner: postgres
+--
+
+CREATE INDEX "IDX_CFDICONCEPTOS_1" ON "InfUsuario"."CFDICONCEPTOS" USING btree ("CLAVEPRODSERV");
+
+
+--
+-- TOC entry 3694 (class 0 OID 53271)
+-- Dependencies: 326 3704
+-- Name: PROVEEDORES69; Type: MATERIALIZED VIEW DATA; Schema: BaseSistema; Owner: postgres
+--
+
+REFRESH MATERIALIZED VIEW "BaseSistema"."PROVEEDORES69";
+
+
+--
+-- TOC entry 3608 (class 0 OID 38378)
+-- Dependencies: 235 3704
+-- Name: PROVEEDORES69B; Type: MATERIALIZED VIEW DATA; Schema: BaseSistema; Owner: postgres
+--
+
+REFRESH MATERIALIZED VIEW "BaseSistema"."PROVEEDORES69B";
+
+
+--
+-- TOC entry 3701 (class 0 OID 60006)
+-- Dependencies: 333 3694 3608 3704
+-- Name: CATALOGOPROVEEDORES; Type: MATERIALIZED VIEW DATA; Schema: InfUsuario; Owner: postgres
+--
+
+REFRESH MATERIALIZED VIEW "InfUsuario"."CATALOGOPROVEEDORES";
+
+
+--
+-- TOC entry 3702 (class 0 OID 60030)
+-- Dependencies: 334 3694 3608 3704
+-- Name: CFDIVALIDADOS69Y69B; Type: MATERIALIZED VIEW DATA; Schema: InfUsuario; Owner: postgres
+--
+
+REFRESH MATERIALIZED VIEW "InfUsuario"."CFDIVALIDADOS69Y69B";
+
+
+-- Completed on 2019-10-21 10:18:15 CDT
 
 --
 -- PostgreSQL database dump complete
