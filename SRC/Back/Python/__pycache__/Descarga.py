@@ -13,7 +13,6 @@ import functools
 from psycopg2 import Error
 from time import localtime, strftime
 from datetime import datetime, timedelta, time
-from zipfile import ZipFile
 
 CONF_FILE = os.path.expanduser('~/.config/pag')
 
@@ -58,8 +57,8 @@ def run(cmd, echo=True, graceful=True):
 def main():
     bError = 1
 
-    opts, args = getopt.getopt(sys.argv[1:], "r:p:t:")
-    msgFormato = "Descarga.py -r <rfc> -p <periodo> -t <tipo>"
+    opts, args = getopt.getopt(sys.argv[1:], "r:t:")
+    msgFormato = "Descarga.py -r <rfc> -t <tipo>"
 
     if len(opts) == 0:
         print("INGRESE LOS PARAMETROS")
@@ -69,8 +68,7 @@ def main():
     try:
         
         strrfc = str(sys.argv[2])
-        period = str(sys.argv[4])
-        strtipo = str(sys.argv[6])
+        strtipo = str(sys.argv[4])
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print("ERROR EN LOS DATOS INGRESADOS")
         print(msgFormato)
@@ -91,15 +89,6 @@ def main():
             raise ValueError('error')
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print('INGRESE EL TIPO DE SOLICITUD')
-        print(msgFormato)
-        sys.exit()
-        return
-    
-    try:
-        if not strtipo.upper() in ("CFDI", "METADATA"):
-            raise ValueError('error')
-    except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
-        print('NO EXISTE EL TIPO DE SOLICITUD')
         print(msgFormato)
         sys.exit()
         return
@@ -216,7 +205,6 @@ def main():
                             comando = 'openssl pkcs8 -inform DER -in Llave.key -out Llave.key.pem -passin pass:' + str(paswd2)
                             args = shlex.split(comando)
                             p = run(args)
-                            print(p)
 
                             print("**** SOLICITANDO AUTORIZACIONES ***")
                             comando = 'php Descarga.php -c "Cert.cer" -k "Llave.key.pem" -r "' + str(strrfc) + '" -a "' + str(TokenAutoriza2) + '" -v "' + str(Solicitud2) + '"'
@@ -239,40 +227,6 @@ def main():
                             cursor.execute(consulta)
                             conexion.commit()
                             cursor.close()
-
-                            if str(strtipo) == "CFDI":
-
-                                strArchivo = str(Solicitud2) + ".zip"
-
-                                print("**** PREPARANDO XML ***")
-                                comando = 'unzip -o ' + str(strArchivo) 
-                                args = shlex.split(comando)
-                                run(args)
-
-                                print("**** GENERANDO INVENTARIO DE XML ***")
-                                numPagina = 1
-                                cont=1
-
-                                with ZipFile(str(strArchivo), 'r') as zipObj:
-                                    listOfiles = zipObj.namelist()
-                                    for elem in listOfiles:
-                                        strArchivotxt = elem
-                                        print(strArchivotxt)
-                                        numPagina = 1
-                                        cont=1
-
-                                        cursor = conexion.cursor()
-                                        consulta = ""
-                                        consulta = "INSERT INTO \"BaseSistema\".\"LOGCARGAXML\" (\"CVE_DESCARGA\", \"ARCHIVOXML\", \"STATUS\", \"PAGINA\", \"PERIODO\", \"STATUSPERIODO\" ) "
-                                        consulta = consulta + "VALUES ('" + str(CVE_DESCARGA) + "', '" + str(strArchivotxt) + "', 34, '" + str(numPagina) + "', '" + str(period) + "', 38 )"
-                                        cursor.execute(consulta)
-                                        conexion.commit()
-                                        cursor.close()
-
-                                        cont = cont + 1
-                                        if cont >= 101:
-                                            numPagina = numPagina + 1
-                                            cont = 1
 
                             bError = 0
                     

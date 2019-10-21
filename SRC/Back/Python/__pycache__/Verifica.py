@@ -13,7 +13,6 @@ import functools
 from psycopg2 import Error
 from time import localtime, strftime
 from datetime import datetime, timedelta, time
-from zipfile import ZipFile
 
 CONF_FILE = os.path.expanduser('~/.config/pag')
 
@@ -58,8 +57,8 @@ def run(cmd, echo=True, graceful=True):
 def main():
     bError = 1
 
-    opts, args = getopt.getopt(sys.argv[1:], "r:p:t:")
-    msgFormato = "Descarga.py -r <rfc> -p <periodo> -t <tipo>"
+    opts, args = getopt.getopt(sys.argv[1:], "r:t:")
+    msgFormato = "Verifica.py -r <rfc> -t <tipo>"
 
     if len(opts) == 0:
         print("INGRESE LOS PARAMETROS")
@@ -69,8 +68,7 @@ def main():
     try:
         
         strrfc = str(sys.argv[2])
-        period = str(sys.argv[4])
-        strtipo = str(sys.argv[6])
+        strtipo = str(sys.argv[4])
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print("ERROR EN LOS DATOS INGRESADOS")
         print(msgFormato)
@@ -91,15 +89,6 @@ def main():
             raise ValueError('error')
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print('INGRESE EL TIPO DE SOLICITUD')
-        print(msgFormato)
-        sys.exit()
-        return
-    
-    try:
-        if not strtipo.upper() in ("CFDI", "METADATA"):
-            raise ValueError('error')
-    except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
-        print('NO EXISTE EL TIPO DE SOLICITUD')
         print(msgFormato)
         sys.exit()
         return
@@ -216,63 +205,35 @@ def main():
                             comando = 'openssl pkcs8 -inform DER -in Llave.key -out Llave.key.pem -passin pass:' + str(paswd2)
                             args = shlex.split(comando)
                             p = run(args)
-                            print(p)
 
                             print("**** SOLICITANDO AUTORIZACIONES ***")
-                            comando = 'php Descarga.php -c "Cert.cer" -k "Llave.key.pem" -r "' + str(strrfc) + '" -a "' + str(TokenAutoriza2) + '" -v "' + str(Solicitud2) + '"'
+                            comando = 'php Verifica.php -c "Cert.cer" -k "Llave.key.pem" -r "' + str(strrfc) + '" -a "' + str(TokenAutoriza2) + '" -s "' + str(Solicitud2) + '"'
                             args = shlex.split(comando)
                             p = run(args)
+
+                            NumPaquete = str(p[1])
+                            if len(NumPaquete) >= 40:
+                                msgError = 'ERROR: ' + str(NumPaquete)
+                                raise NameError(msgError)
+                            if NumPaquete == "0":
+                                msgError = 'ERROR: ' + str(NumPaquete)
+                                raise NameError(msgError)
+                            if NumPaquete == 0:
+                                msgError = 'ERROR: ' + str(NumPaquete)
+                                raise NameError(msgError)
+
+                            print("**** CALCULANDO DATOS ***")
+                            hexlify = codecs.getencoder('hex')
+                            Paquete = str(hexlify(NumPaquete.encode('utf-8'))[0])[0:5000]
 
                             print("**** ACTUALIZANDO EL SISTEMA ***")
                             cursor = conexion.cursor()
                             consulta = ""
-                            consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSPROCESO\" SET \"FH_INI\" = '" + str(fechaInicio) + "', \"FH_FIN\" = '" + str(fechaFin) + "', \"MSGERROR\" = 'DESCARGA COMPLETA', \"STATUS\" = 31 "
+                            consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSPROCESO\" SET \"FH_INI\" = '" + str(fechaInicio) + "', \"FH_FIN\" = '" + str(fechaFin) + "', \"IDPROCESO\" = '" + str(Paquete) + "', \"STATUS\" = 28 "
                             consulta = consulta + "WHERE \"CVE_DESCARGA\" = '" + str(CVE_DESCARGA) + "' AND  \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '" + str(strtipo) + "'"
                             cursor.execute(consulta)
                             conexion.commit()
                             cursor.close()
-
-                            cursor = conexion.cursor()
-                            consulta = ""
-                            consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"STATUS\" = 31, \"MSGERROR\" = '" + str(Solicitud2) + "' "
-                            consulta = consulta + " WHERE \"ID_DESCARGAWS\" = '" + str(strIdDescarga) + "'"
-                            cursor.execute(consulta)
-                            conexion.commit()
-                            cursor.close()
-
-                            if str(strtipo) == "CFDI":
-
-                                strArchivo = str(Solicitud2) + ".zip"
-
-                                print("**** PREPARANDO XML ***")
-                                comando = 'unzip -o ' + str(strArchivo) 
-                                args = shlex.split(comando)
-                                run(args)
-
-                                print("**** GENERANDO INVENTARIO DE XML ***")
-                                numPagina = 1
-                                cont=1
-
-                                with ZipFile(str(strArchivo), 'r') as zipObj:
-                                    listOfiles = zipObj.namelist()
-                                    for elem in listOfiles:
-                                        strArchivotxt = elem
-                                        print(strArchivotxt)
-                                        numPagina = 1
-                                        cont=1
-
-                                        cursor = conexion.cursor()
-                                        consulta = ""
-                                        consulta = "INSERT INTO \"BaseSistema\".\"LOGCARGAXML\" (\"CVE_DESCARGA\", \"ARCHIVOXML\", \"STATUS\", \"PAGINA\", \"PERIODO\", \"STATUSPERIODO\" ) "
-                                        consulta = consulta + "VALUES ('" + str(CVE_DESCARGA) + "', '" + str(strArchivotxt) + "', 34, '" + str(numPagina) + "', '" + str(period) + "', 38 )"
-                                        cursor.execute(consulta)
-                                        conexion.commit()
-                                        cursor.close()
-
-                                        cont = cont + 1
-                                        if cont >= 101:
-                                            numPagina = numPagina + 1
-                                            cont = 1
 
                             bError = 0
                     

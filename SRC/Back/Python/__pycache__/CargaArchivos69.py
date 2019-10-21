@@ -154,54 +154,23 @@ def main(argv):
                     print("**** RESPALDANDO CONTENIDO ***")
                     
                     if str(tipo) == "69":
-                        if str(Archivo) == "Condonadosart146BCFF.csv":
-                            consulta = ""
-                            cursor = conexion.cursor()
-                            consulta = "UPDATE \"BaseSistema\".\"" + str(strtablatemp) + "\" SET \"SUPUESTO\" = 'CONDONADO CONCURSO MERCANTIL' "
-                            consulta = consulta + "WHERE TRIM(\"SUPUESTO\") = 'CONDONADOS' "
-                            # print(consulta)
-                            # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-                            # return
-                            cursor.execute(consulta)
-                            cursor.close()
-
-                            consulta = ""
-                            cursor = conexion.cursor()
-                            strcamposinsercion = strcamposinsercion + "\"CVE_DESCARGA\", \"FH_HIST\", \"AGRUPACION\", \"SELECCION\""
-                            strvalorinsercion = strvalorinsercion + "'" + CVE_DESCARGA + "' AS \"CVE_DESCARGA\", "
-                            strvalorinsercion = strvalorinsercion + "NOW() AS \"FH_HIST\", "
-                            strvalorinsercion = strvalorinsercion + "CASE WHEN \"SUPUESTO\" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO' WHEN \"SUPUESTO\" = 'SENTENCIAS' THEN 'DELITO FISCAL' ELSE \"SUPUESTO\" END AS \"AGRUPACION\", "
-                            strvalorinsercion = strvalorinsercion + "CASE WHEN \"SUPUESTO\" = 'NO LOCALIZADOS' THEN 1 WHEN \"SUPUESTO\" = 'SENTENCIAS' THEN 2 WHEN \"SUPUESTO\" = 'FIRMES' THEN 3 "
-                            strvalorinsercion = strvalorinsercion + "WHEN \"SUPUESTO\" = 'EXIGIBLES' THEN 4 WHEN \"SUPUESTO\" = 'RETORNO INVERSIONES' THEN 5 WHEN \"SUPUESTO\" = 'CONDONADO CONCURSO MERCANTIL' THEN 6 WHEN \"SUPUESTO\" = 'CONDONADOS' THEN 7 "
-                            strvalorinsercion = strvalorinsercion + "WHEN \"SUPUESTO\" = 'CANCELADOS' THEN 8 END AS \"SELECCION\""
-                            consulta = "INSERT INTO \"BaseSistemaHistorico\".\"INF69\"( "
-                            consulta = consulta + strcamposinsercion + " ) SELECT "
-                            consulta = consulta + strvalorinsercion + " FROM \"BaseSistema\".\"" + str(strtablatemp) + "\" "
-                            consulta = consulta + "WHERE \"RFC\" IS NOT NULL "
-                            # print(consulta)
-                            # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-                            # return
-                            cursor.execute(consulta)
-                            cursor.close()
-                        else:
-                            consulta = ""
-                            cursor = conexion.cursor()
-                            strcamposinsercion = strcamposinsercion + "\"CVE_DESCARGA\", \"FH_HIST\", \"AGRUPACION\", \"SELECCION\""
-                            strvalorinsercion = strvalorinsercion + "'" + CVE_DESCARGA + "' AS \"CVE_DESCARGA\", "
-                            strvalorinsercion = strvalorinsercion + "NOW() AS \"FH_HIST\", "
-                            strvalorinsercion = strvalorinsercion + "CASE WHEN \"SUPUESTO\" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO' WHEN \"SUPUESTO\" = 'SENTENCIAS' THEN 'DELITO FISCAL' ELSE \"SUPUESTO\" END AS \"AGRUPACION\", "
-                            strvalorinsercion = strvalorinsercion + "CASE WHEN \"SUPUESTO\" = 'NO LOCALIZADOS' THEN 1 WHEN \"SUPUESTO\" = 'SENTENCIAS' THEN 2 WHEN \"SUPUESTO\" = 'FIRMES' THEN 3 "
-                            strvalorinsercion = strvalorinsercion + "WHEN \"SUPUESTO\" = 'EXIGIBLES' THEN 4 WHEN \"SUPUESTO\" = 'RETORNO INVERSIONES' THEN 5 WHEN \"SUPUESTO\" = 'CONDONADO CONCURSO MERCANTIL' THEN 6 WHEN \"SUPUESTO\" = 'CONDONADOS' THEN 7 "
-                            strvalorinsercion = strvalorinsercion + "WHEN \"SUPUESTO\" = 'CANCELADOS' THEN 8 END AS \"SELECCION\""
-                            consulta = "INSERT INTO \"BaseSistemaHistorico\".\"INF69\"( "
-                            consulta = consulta + strcamposinsercion + " ) SELECT "
-                            consulta = consulta + strvalorinsercion + " FROM \"BaseSistema\".\"" + str(strtablatemp) + "\" "
-                            consulta = consulta + "WHERE \"RFC\" IS NOT NULL "
-                            # print(consulta)
-                            # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-                            # return
-                            cursor.execute(consulta)
-                            cursor.close()
+                        consulta = ""
+                        cursor = conexion.cursor()
+                        strcamposinsercion = strcamposinsercion + "\"CVE_DESCARGA\", \"FH_HIST\", \"AGRUPACION\", \"SELECCION\""
+                        strvalorinsercion = strvalorinsercion + "'" + CVE_DESCARGA + "' AS \"CVE_DESCARGA\", "
+                        strvalorinsercion = strvalorinsercion + "NOW() AS \"FH_HIST\", "
+                        strvalorinsercion = strvalorinsercion + "CASE WHEN \"SUPUESTO\" = 'NO LOCALIZADOS' THEN 'NO LOCALIZADO' WHEN \"SUPUESTO\" = 'SENTENCIAS' THEN 'DELITO FISCAL' ELSE \"SUPUESTO\" END AS \"AGRUPACION\", "
+                        strvalorinsercion = strvalorinsercion + "CASE WHEN \"SUPUESTO\" = 'NO LOCALIZADOS' THEN 1 WHEN \"SUPUESTO\" = 'SENTENCIAS' THEN 2 WHEN \"SUPUESTO\" = 'FIRMES' THEN 3 "
+                        strvalorinsercion = strvalorinsercion + "WHEN \"SUPUESTO\" = 'EXIGIBLES' THEN 4 WHEN \"SUPUESTO\" = 'RETORNO INVERSIONES' THEN 5 WHEN \"SUPUESTO\" = 'CONDONADOS' THEN 6 "
+                        strvalorinsercion = strvalorinsercion + "WHEN \"SUPUESTO\" = 'CANCELADOS' THEN 7 END AS \"SELECCION\""
+                        consulta = "INSERT INTO \"BaseSistemaHistorico\".\"INF69\"( "
+                        consulta = consulta + strcamposinsercion + " ) SELECT "
+                        consulta = consulta + strvalorinsercion + " FROM \"BaseSistema\".\"" + str(strtablatemp) + "\""
+                        # print(consulta)
+                        # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+                        # return
+                        cursor.execute(consulta)
+                        cursor.close()
 
                         print("**** REMOVIENDO FUENTE ***")
                         os.remove(Archivo)
@@ -216,7 +185,7 @@ def main(argv):
                         strvalorinsercion = strvalorinsercion + "WHEN \"SITUACION_CONTR\" = 'Definitivo' THEN to_date(\"FH_PUB_SAT_DEF\", 'DD/MM/YYYY') WHEN \"SITUACION_CONTR\" = 'Sentencia Favorable' THEN to_date(\"FH_OFIC_GLO_SENT_FAV_SAT\", 'DD/MM/YYYY') END AS \"FH_PUB_69B\" "
                         consulta = "INSERT INTO \"BaseSistemaHistorico\".\"INF69B\"( "
                         consulta = consulta + strcamposinsercion + " ) SELECT "
-                        consulta = consulta + strvalorinsercion + " FROM \"BaseSistema\".\"" + str(strtablatemp) + "\" WHERE (\"NO\" ~ '^[0-9]') = TRUE AND \"RFC\" IS NOT NULL  AND TRIM(\"RFC\") <> 'XXXXXXXXXXXX' "
+                        consulta = consulta + strvalorinsercion + " FROM \"BaseSistema\".\"" + str(strtablatemp) + "\" WHERE (\"NO\" ~ '^[0-9]') = TRUE "
                         # print(consulta)
                         # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
                         # return

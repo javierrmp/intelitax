@@ -90,15 +90,6 @@ def main():
         sys.exit()
         return
 
-    try:
-        if not strtipo.upper() in ("CFDI", "METADATA"):
-            raise ValueError('error')
-    except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
-        print('NO EXISTE EL TIPO DE SOLICITUD')
-        print(msgFormato)
-        sys.exit()
-        return
-
     conexion = AbrirConexionPostgresql()
     
     print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))

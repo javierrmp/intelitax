@@ -116,14 +116,14 @@ def getAtributos(connection, nomFileXml, cvedescarga):
         consulta = consulta + "'" + atributos['UsoCFDI'] + "', '" + str(cvedescarga) + "'"
         consulta = consulta + ")"
 
-        # print(consulta)
+        #print(consulta)
         cursor.execute(consulta)
         connection.commit()
         cursor.close()
 
         cursor = connection.cursor()
         consulta = ""
-        consulta = "SELECT \"ID_COMPROBANTE\" FROM \"InfUsuario\".\"CFDICOMPROBANTE\" WHERE \"CVE_DESCARGA\" = '" + cvedescarga + "' AND \"NOCERTIFICADO\" = '" + atributos['NoCertificado'] + "' "
+        consulta = "SELECT \"ID_COMPROBANTE\" FROM \"InfUsuario\".\"CFDICOMPROBANTE\" WHERE \"CVE_DESCARGA\" = '" + cvedescarga + "' "
         cursor.execute(consulta)
         if not cursor.rowcount:
             print("FALLO LA CABECERA DEL COMPROBANTE")
@@ -181,7 +181,7 @@ def getAtributos(connection, nomFileXml, cvedescarga):
 
                         cursor = connection.cursor()
                         consulta = ""
-                        consulta = "SELECT \"ID_CONCEPTO\" FROM \"InfUsuario\".\"CFDICONCEPTOS\" WHERE \"ID_COMPROBANTE\" = '" + str(idcomprobante) + "' AND \"CLAVEPRODSERV\" = '" + atributos['ClaveProdServ'] + "' "
+                        consulta = "SELECT \"ID_CONCEPTO\" FROM \"InfUsuario\".\"CFDICONCEPTOS\" WHERE \"ID_COMPROBANTE\" = '" + str(idcomprobante) + "' "
                         cursor.execute(consulta)
                         if not cursor.rowcount:
                             print("FALLO LA CABECERA DEL CONCEPTO")
@@ -197,7 +197,7 @@ def getAtributos(connection, nomFileXml, cvedescarga):
                                 impuestosPrincipal = concepto.getElementsByTagName('cfdi:Impuestos')
                                 for impuestosNodo in impuestosPrincipal:
                                     HayTraslados = 0
-                                    HayRetenciones = 0
+                                    HayRetenciones = 1
 
                                     trasladosPrincipal = impuestosNodo.getElementsByTagName('cfdi:Traslados')
                                     for trasladosNodo in trasladosPrincipal:
@@ -382,126 +382,9 @@ def getAtributos(connection, nomFileXml, cvedescarga):
                         cursor.execute(consulta)
                         connection.commit()
                         cursor.close()
-                    
-                    pagosPrincipal = complementoNodo.getElementsByTagName('pago10:Pagos')
-                    for pagosNodo in pagosPrincipal:
-                        atributos['Version'] = pagosNodo.getAttribute('Version')
-                        
-                        pagos = pagosNodo.getElementsByTagName('pago10:Pago')
-                        for pago in pagos:
-                            atributos['FechaPago'] = pago.getAttribute('FechaPago')
-                            atributos['FormaDePagoP'] = pago.getAttribute('FormaDePagoP')
-                            atributos['MonedaP'] = pago.getAttribute('MonedaP')
-                            atributos['Monto'] = pago.getAttribute('Monto')
-                            atributos['RfcEmisorCtaBen'] = pago.getAttribute('RfcEmisorCtaBen')
-                            atributos['CtaBeneficiario'] = pago.getAttribute('CtaBeneficiario')
-
-                            print("**** GUARDANDO COMPROBANTE PAGOS ***")
-                            cursor = connection.cursor()
-                            consulta = ""
-                            consulta = "INSERT INTO \"InfUsuario\".\"CFDICOMPROBANTECOMPLEMENTOPAGOS\"( "
-                            consulta = consulta + "\"FECHAPAGO\", \"FORMADEPAGOP\", \"MONEDAP\", \"MONTO\", \"RFCEMISORCTABEN\", "
-                            consulta = consulta + "\"CTABENEFICIARIO\", \"ID_COMPROBANTE\" )"
-                            
-                            consulta = consulta + " VALUES( "
-                            consulta = consulta + "'" + atributos['FechaPago'] + "', '" + atributos['FormaDePagoP'] + "', '" + atributos['MonedaP'] + "', '" + atributos['Monto'] + "', '" + atributos['RfcEmisorCtaBen'] + "', "
-                            consulta = consulta + "'" + atributos['CtaBeneficiario'] + "', '" + str(idcomprobante) + "' "
-                            consulta = consulta + " )"
-                            
-                            #print(consulta)
-                            cursor.execute(consulta)
-                            connection.commit()
-                            cursor.close()
-
-                            cursor = connection.cursor()
-                            consulta = ""
-                            consulta = "SELECT \"ID_PAGO\" FROM \"InfUsuario\".\"CFDICOMPROBANTECOMPLEMENTOPAGOS\" WHERE \"ID_COMPROBANTE\" = '" + str(idcomprobante) + "' AND \"RFCEMISORCTABEN\" = '" + atributos['RfcEmisorCtaBen'] + "' "
-                            cursor.execute(consulta)
-                            if not cursor.rowcount:
-                                print("FALLO LA CABECERA DEL PAGO")
-                                return
-                            else:
-                                RESULTADOS = cursor.fetchall()
-                                cursor.close()
-
-                            for row in RESULTADOS:
-                                if row[0] > 0:
-                                    idpago = row[0]
-
-                                    docrelacionados = pago.getElementsByTagName('pago10:DoctoRelacionado')
-                                    for docrelacionado in docrelacionados:
-                                        atributos['IdDocumento'] = docrelacionado.getAttribute('IdDocumento')
-                                        atributos['Serie'] = docrelacionado.getAttribute('Serie')
-                                        atributos['Folio'] = docrelacionado.getAttribute('Folio')
-                                        atributos['MonedaDR'] = docrelacionado.getAttribute('MonedaDR')
-                                        atributos['MetodoDePagoDR'] = docrelacionado.getAttribute('MetodoDePagoDR')
-                                        atributos['NumParcialidad'] = docrelacionado.getAttribute('NumParcialidad')
-                                        atributos['ImpSaldoAnt'] = docrelacionado.getAttribute('ImpSaldoAnt')
-                                        atributos['ImpPagado'] = docrelacionado.getAttribute('ImpPagado')
-                                        atributos['ImpSaldoInsoluto'] = docrelacionado.getAttribute('ImpSaldoInsoluto')
-
-                                        print("**** GUARDANDO COMPROBANTE PAGOS ***")
-                                        cursor = connection.cursor()
-                                        consulta = ""
-                                        consulta = "INSERT INTO \"InfUsuario\".\"CFDICOMPROBANTECOMPLEMENTOPAGOSDOCS\"( "
-                                        consulta = consulta + "\"IDDOCUMENTO\", \"SERIE\", \"FOLIO\", \"MONEDADR\", \"METODODEPAGODR\", "
-                                        consulta = consulta + "\"NUMPARCIALIDAD\", \"IMPSALDOANT\",\"IMPPAGADO\",\"IMPSALDOINSOLUTO\", \"ID_PAGO\" )"
-                                        
-                                        consulta = consulta + " VALUES( "
-                                        consulta = consulta + "'" + atributos['IdDocumento'] + "', '" + atributos['Serie'] + "', '" + atributos['Folio'] + "', '" + atributos['MonedaDR'] + "', '" + atributos['MetodoDePagoDR'] + "', "
-                                        consulta = consulta + "'" + atributos['NumParcialidad'] + "', '" + atributos['ImpSaldoAnt'] + "', '" + atributos['ImpPagado'] + "', '" + atributos['ImpSaldoInsoluto'] + "', '" + str(idpago) + "' "
-                                        consulta = consulta + " )"
-                                        
-                                        #print(consulta)
-                                        cursor.execute(consulta)
-                                        connection.commit()
-                                        cursor.close()
-
-
-
-                relacionadosPrincipal = comprobante.getElementsByTagName('cfdi:CfdiRelacionados')
-                for relacionadosNodo in relacionadosPrincipal:
-                    atributos['TipoRelacion'] = relacionadosNodo.getAttribute('TipoRelacion')
-                    relacionados = relacionadosNodo.getElementsByTagName('fdi:CfdiRelacionado')
-                    for relacionado in relacionados:
-                        atributos['UUID'] = relacionado.getAttribute('UUID')
-                        
-                        print("**** GUARDANDO COMPROBANTE COMPLEMENTOS ***")
-                        cursor = connection.cursor()
-                        consulta = ""
-                        consulta = "INSERT INTO \"InfUsuario\".\"CFDICOMPROBANTERELACIONADOS\"( "
-                        consulta = consulta + "\"TIPORELACION\", \"UUID\", "
-                        consulta = consulta + "\"ID_COMPROBANTE\" )"
-                        
-                        consulta = consulta + " VALUES( "
-                        consulta = consulta + "'" + atributos['TipoRelacion'] + "', '" + atributos['UUID'] + "', "
-                        consulta = consulta + "'" + str(idcomprobante) + "' "
-                        consulta = consulta + " )"
-                        
-                        #print(consulta)
-                        cursor.execute(consulta)
-                        connection.commit()
-                        cursor.close()
 
     except (Exception, psycopg2.DatabaseError) as error :
         print ("Error mientras se guardaban los datos", error)
-
-        cursor = connection.cursor()
-        consulta = ""
-        consulta = "INSERT INTO \"InfUsuario\".\"CFDITOTAL\"( "
-        consulta = consulta + "\"ERROR\",  "
-        consulta = consulta + "\"UUID\" )"
-        
-        consulta = consulta + " VALUES( "
-        consulta = consulta + "'" + error + "', "
-        consulta = consulta + "'" + str(nomFileXml) + "' "
-        consulta = consulta + " )"
-        
-        #print(consulta)
-        cursor.execute(consulta)
-        connection.commit()
-        cursor.close()
-        return 0
 
     finally:
         return 1
@@ -519,8 +402,8 @@ def run(cmd, echo=True, graceful=True):
 def main():
     bError = 1
 
-    opts, args = getopt.getopt(sys.argv[1:], "r:p:")
-    msgFormato = "CargaXML.py -r <rfc> -p <periodo>"
+    opts, args = getopt.getopt(sys.argv[1:], "r:")
+    msgFormato = "CargaXML.py -r <rfc>"
 
     if len(opts) == 0:
         print("INGRESE LOS PARAMETROS")
@@ -529,7 +412,6 @@ def main():
     
     try:
         strrfc = str(sys.argv[2])
-        period = str(sys.argv[4])
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print("ERROR EN LOS DATOS INGRESADOS")
         print(msgFormato)
@@ -545,19 +427,9 @@ def main():
         sys.exit()
         return
 
-    try:
-        if len(period) < 6:
-            raise ValueError('error')
-    except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
-        print('INGRESE EL PERIODO')
-        print(msgFormato)
-        sys.exit()
-        return
-
     conexion = AbrirConexionPostgresql()
 
     print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
-    CVE_DESCARGA = strftime("%Y%m%d%H%M%S", localtime())
  
     print("**** VALIDANDO RFC ***")
 
@@ -576,91 +448,80 @@ def main():
         if row[0] > 0:
 
             idrfc = row[0]
+            CVE_DESCARGA = strftime("%Y%m%d%H%M%S", localtime())
 
-            print("**** INHABILITA PERIODOS POSIBLEMENTE REPETIDOS ***")
+            print("**** VALIDANDO INFORMACION XML ***")
+
             cursor = conexion.cursor()
-            consulta = "UPDATE \"BaseSistema\".\"LOGCARGAXML\" SET \"STATUSPERIODO\" = 39 WHERE \"STATUS\" = 36 AND \"STATUSPERIODO\" = 38 AND \"PERIODO\" = '" + str(period) + "' "
+            consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"CVE_CARGA\" = '" + str(CVE_DESCARGA) + "' "
+            consulta = consulta + "WHERE \"ID_DESCARGAWS\" = ( "
+            consulta = consulta + "SELECT \"ID_DESCARGAWS\" FROM \"BaseSistema\".\"LOGDESCARGAWSAUTH\" "
+            consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND \"TIPO\" = 'CFDI' AND \"STATUS\" = 31 AND \"MSGERROR\" <> '' AND \"CVE_CARGA\" IS NULL "
+            consulta = consulta + "ORDER BY \"ID_DESCARGAWS\" LIMIT 2 "
+            consulta = consulta + ")"
             cursor.execute(consulta)
             conexion.commit()
             cursor.close()
 
-            # print("**** MARCANDO INFORMACION XML ***")
-            # cursor = conexion.cursor()
-            # consulta = "CALL \"BaseSistema\".\"MarcaXML\"('" + str(CVE_DESCARGA) + "', " + str(idrfc) + ", '" + str(period) + "')"
-            # cursor.execute(consulta)
-            # conexion.commit()
-            # cursor.close()
-
-            print("**** BUSCANDO BATCH DE XML A PROCESAR ***")
             cursor = conexion.cursor()
-            consulta = "SELECT \"ARCHIVOXML\", \"ID_CARGAXML\" FROM \"BaseSistema\".\"LOGCARGAXML\" WHERE \"CVE_CARGA\" = '" + str(CVE_DESCARGA) + "' AND \"STATUS\" = 35 AND \"PERIODO\" = '" + str(period) + "' "
+            consulta = "SELECT \"ID_DESCARGAWS\", \"MSGERROR\" FROM \"BaseSistema\".\"LOGDESCARGAWSAUTH\" "
+            consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND \"TIPO\" = 'CFDI' AND \"STATUS\" = 31 AND \"MSGERROR\" <> '' AND \"CVE_CARGA\" = '" + str(CVE_DESCARGA) + "'  "
+            consulta = consulta + "ORDER BY \"ID_DESCARGAWS\" "
             cursor.execute(consulta)
-            
             if not cursor.rowcount:
-                print("NO HAY XML DISPONIBLES PARA PROCESAR")
+                print("NO SE ENCONTRO EL REGISTRO DEL XML")
                 return
             else:
                 RESULTADOS2 = cursor.fetchall()
                 cursor.close()
 
             for row2 in RESULTADOS2:
-                
                 try:
-                    
-                    strArchivotxt = str(row2[0]).strip()
-                    strCveCargaXML = str(row2[1]).strip()
-                    print (strArchivotxt)
+                    #idDescarga = str(row2[0])
+                    strArchivo = str(row2[1]) + '.zip'
 
-                    stat = getAtributos(conexion, strArchivotxt, str(strCveCargaXML))
-                    
+                    print("**** PREPARANDO XML ***")
+                    comando = 'unzip -o ' + str(strArchivo) 
+                    args = shlex.split(comando)
+                    run(args)
+
+                    with ZipFile(str(strArchivo), 'r') as zipObj:
+                        listOfiles = zipObj.namelist()
+                        for elem in listOfiles:
+                            strArchivotxt = elem
+                            
+                            print("**** PROCESANDO ***", strArchivotxt)
+
+                            stat = getAtributos(conexion, strArchivotxt, str(CVE_DESCARGA))
+
+                            print("**** LIMPIANDO TEMPORALES ***")
+                            os.remove(strArchivotxt)
+
                     if stat == 1:
                         print("**** PROCESO COMPLETADO ***")
-                        cursor = conexion.cursor()
-                        consulta = "UPDATE \"BaseSistema\".\"LOGCARGAXML\" SET \"STATUS\" = 36, \"USAPAGO\" = 1 WHERE \"ID_CARGAXML\" = '" + str(strCveCargaXML) + "' AND \"STATUS\" = 35 AND \"PERIODO\" = '" + str(period) + "' "
-                        cursor.execute(consulta)
-                        conexion.commit()
-                        cursor.close()
-
-                        print("**** LIMPIANDO XML ***")
-                        os.remove(strArchivotxt)
-
                         bError = 0
 
                 except (psycopg2.Error, RuntimeError, TypeError, NameError, OSError, ValueError, Exception) as error :
                     if bError == 1:
-                        print("**** ERROR EN LA CARGA DEL XML ***")
-                        cursor = conexion.cursor()
-                        consulta = "UPDATE \"BaseSistema\".\"LOGCARGAXML\" SET \"STATUS\" = 37, \"MSGERROR\" = '" + str(error) + "' WHERE \"ID_CARGAXML\" = '" + str(strCveCargaXML) + "' AND \"PERIODO\" = '" + str(period) + "'"
-                        cursor.execute(consulta)
-                        conexion.commit()
-                        cursor.close()
+                        print("**** ERROR EN LA CARGA DEL XML ***")    
+                        print(error)
 
                 finally:
 
-                    print("**** CARGA FINALIZADA ***")
                     cursor = conexion.cursor()
                     consulta = ""
                     consulta = "CALL \"BaseSistema\".\"RecargaResultados\"('" + CVE_DESCARGA + "');"
+                    print("**** RECALCULANDO RESULTADOS ***")
                     cursor.execute(consulta)
                     conexion.commit()
                     cursor.close()
 
-                    print("**** MARCA PAGOS QUE NO ESTAN SUS DOCUMENTOS RELACIONADOS ***")
-                    cursor = conexion.cursor()
-                    consulta = ""
-                    consulta = "CALL \"BaseSistema\".\"MarcaPagosInValidosXdocu\"();"
-                    cursor.execute(consulta)
-                    conexion.commit()
-                    cursor.close()
-                    
+                    statusCerrada = CerrarConexionPostgresql(conexion)
 
-            print("CIERRA CONEXION")
-            statusCerrada = CerrarConexionPostgresql(conexion)
+                    print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
 
-            print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
-
-            if statusCerrada == True:
-                return "ARCHIVOS CARGADOS"
+                    if statusCerrada == True:
+                        return "ARCHIVOS CARGADOS"
 
 if __name__ == "__main__":
     main()

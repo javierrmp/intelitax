@@ -215,7 +215,6 @@ def main():
 
                                 print("**** LIMPIANDO TEMPORALES ***")
                                 os.remove(strArchivotxt)
-                                os.remove(str(strArchivo) + '.zip')
 
                                 print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
 

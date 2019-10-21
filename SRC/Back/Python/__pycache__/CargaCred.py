@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import sys
 import os.path
 import datetime
@@ -46,7 +43,7 @@ def main(argv):
         return
 
     hexlify = codecs.getencoder('hex')
-    sys.argv[2] = str(hexlify(str(sys.argv[2]).encode('utf-8'))[0])[0:5000]
+    sys.argv[2] = str(hexlify(str(sys.argv[2]).encode('utf-8'))[0])[1:500]
 
     Ruta = os.getcwd()
     Archivos = os.listdir(Ruta)
@@ -100,11 +97,11 @@ def main(argv):
     print(msg)
 
     msg = "Los siguientes archivos van a ser cargados al RFC: %s" % sys.argv[1]
-    # msg = msg + " es correcto (y/n)"
-    # resp = input(msg)
+    msg = msg + " es correcto (y/n)"
+    resp = input(msg)
 
-    # if resp == "n":
-    #     return
+    if resp == "n":
+        return
 
     print("**** CARGANDO CREDENCIALES ***")
     print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
@@ -112,14 +109,14 @@ def main(argv):
     cursor = conexion.cursor()
     consulta = ""
     consulta = "CALL \"BaseSistema\".\"CargaCredenciales\" ('" 
-    consulta = consulta + str(idrfc[0]) + "', '" + sys.argv[2] + "', '" + Ruta + "', '" + sNombreKey + "', '" + sNombreCer + "', '" + "7" +  "')"
+    consulta = consulta + str(idrfc[0]) + "', " + sys.argv[2] + ", '" + Ruta + "', '" + sNombreKey + "', '" + sNombreCer + "', '" + "7" +  "')"
     cursor.execute(consulta)
     conexion.commit()
     cursor.close()
     
     cursor = conexion.cursor()
     consulta = ""
-    consulta = "SELECT \"ID_CRED\" FROM \"BaseSistema\".\"CFGCLTESCREDENCIALES\" WHERE \"ID_RFC\" = '" + str(idrfc[0]) + "' AND \"PASS\" = '" + sys.argv[2]+ "';"
+    consulta = "SELECT \"ID_CRED\" FROM \"BaseSistema\".\"CFGCLTESCREDENCIALES\" WHERE \"ID_RFC\" = '" + str(idrfc[0]) + "' AND \"PASS\" = " + sys.argv[2]+ ";"
     cursor.execute(consulta)
     RESULTADOS = cursor.fetchall()
     cursor.close()
