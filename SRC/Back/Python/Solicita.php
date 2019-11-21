@@ -1,7 +1,7 @@
 <?php
 
 function Sol() {
-    $argumentos = getopt("c:k:r:i:f:t:a:", array(
+    $argumentos = getopt("c:k:r:i:f:t:a:u:", array(
         "certificado:",
         "llave:",
         "rfc:",
@@ -9,6 +9,7 @@ function Sol() {
         "fechafin",
         "tipo",
         "autoriza",
+        "funcion",
         ));
 
     if (
@@ -25,15 +26,18 @@ function Sol() {
         !isset($argumentos["t"]) || isset($argumentos["tipo"])
         ||
         !isset($argumentos["a"]) || isset($argumentos["autoriza"])
+        ||
+        !isset($argumentos["u"]) || isset($argumentos["funcion"])
     )   {
         exit("Modo de uso:
-            -c --certificado   certificado
-            -k --llave         Llave
-            -r --rfc           RFC
-            -i --fechainicial  Fecha Inicial
-            -f --fechafin      Fecha Final
-            -t --tipo          Tipo Solicitud
-            -a --autoriza    Token Autorizacion
+            -c --certificado    Certificado
+            -k --llave          Llave
+            -r --rfc            RFC
+            -i --fechainicial   Fecha Inicial
+            -f --fechafin       Fecha Final
+            -t --tipo           Tipo Solicitud
+            -a --autoriza       Token Autorizacion
+            -u --funcion        emisor o receptor
             ");
         }
 
@@ -44,6 +48,7 @@ function Sol() {
     $ffinal = isset($argumentos["f"]) ? $argumentos["f"] : $argumentos["fechafin"];
     $tipo = isset($argumentos["t"]) ? $argumentos["t"] : $argumentos["tipo"];
     $idautoriza = isset($argumentos["a"]) ? $argumentos["a"] : $argumentos["autoriza"];
+    $funcion = isset($argumentos["u"]) ? $argumentos["u"] : $argumentos["funcion"];
 
     include_once('include/LoginXmlRequest.php');
     include_once('include/RequestXmlRequest.php');
@@ -63,7 +68,11 @@ function Sol() {
     $TipoSolicitud = $tipo;
     $token = $idautoriza;
 
-    $ResponseRequest = $solicita->soapRequest($cert, $key, $token, $rfc, $fechaInicial, $fechaFinal, $TipoSolicitud);
+    // $fh = fopen("Datos2.xml", 'w') or die("Se produjo un error al crear el archivo");
+    // fwrite($fh, $funcion) or die("No se pudo escribir en el archivo");
+    // fclose($fh);
+    
+    $ResponseRequest = $solicita->soapRequest($cert, $key, $token, $rfc, $fechaInicial, $fechaFinal, $TipoSolicitud, $funcion);
     $idSolicitud = $ResponseRequest->idSolicitud;
     return $idSolicitud;
 

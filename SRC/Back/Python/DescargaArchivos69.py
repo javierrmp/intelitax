@@ -11,7 +11,13 @@ from chardet import detect
 
 def url_response(url):
     path, url, pathnvo = url
+    directorio = "./listados/"
+    
     print(path)
+    
+    pathnvo = directorio + pathnvo
+    path = directorio + path
+
     if os.path.exists(pathnvo):
         os.remove(pathnvo)
     r = requests.get(url, stream = True)

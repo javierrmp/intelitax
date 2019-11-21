@@ -97,7 +97,11 @@ def main(argv):
                     strcampostabla = ""
                     strcamposinsercion = ""
                     strvalorinsercion = ""
+
                     for column in df.columns:
+                        # print("*******************************************")
+                        # print(column)
+                        strcampo = ""
                         cursor = conexion.cursor()        
                         consulta =  "SELECT TRIM(BOTH FROM \"CAMPO\" ) AS CAMPO, TRIM(BOTH FROM \"REG\") AS REG, TRIM(BOTH FROM \"VALOR\") AS VALOR FROM \"BaseSistema\".\"CFGFILECOLUMNS\" WHERE \"COLUMNA\" = '" + str(column) + "' AND \"STATUS\" = 12"
                         cursor.execute(consulta)
@@ -108,15 +112,35 @@ def main(argv):
                             strcampo = row[0]
                             strcampoins = row[1]
                             strvalorins = row[2]
-                            if strcampo == None:
-                                print("NO HAY COINCIDENCIAS EN LA ESTRUCTURA, VALIDE DE NUEVO")
-                                sys.exit()
-                                return
-                            else:
-                                strcampostabla = strcampostabla + str(strcampo) + ', '
-                                if strcampoins != None:
-                                    strcamposinsercion = strcamposinsercion + str(strcampoins) + ', '
-                                    strvalorinsercion = strvalorinsercion + str(strvalorins) + ', '
+
+                        # print(strcampo)
+                        if strcampo =="":
+                            print("**** AGREGANDO COLUMNAS NUEVAS ***")
+
+                            NomColumna = column
+                            NomColumna = NomColumna.upper()
+                            NomColumna = NomColumna.replace(":", " ")
+                            NomColumna = NomColumna.replace(" ", "_")
+
+                            cursor = conexion.cursor()        
+                            consulta =  "INSERT INTO \"BaseSistema\".\"CFGFILECOLUMNS\" (\"COLUMNA\", \"CAMPO\", \"STATUS\") VALUES ("
+                            consulta = consulta + "'" + column + "', "
+                            consulta = consulta + "'\"" + NomColumna + "\" character(255) COLLATE pg_catalog.\"default\"', "
+                            consulta = consulta + "'12' "
+                            consulta = consulta + ")"
+
+                            # print(consulta)
+                            cursor.execute(consulta)
+                            conexion.commit()
+                            cursor.close()
+
+                            strcampostabla = strcampostabla + str("\"" + NomColumna + "\" character(255) COLLATE pg_catalog.\"default\"") + ', '
+
+                        else:
+                            strcampostabla = strcampostabla + str(strcampo) + ', '
+                            if strcampoins != None:
+                                strcamposinsercion = strcamposinsercion + str(strcampoins) + ', '
+                                strvalorinsercion = strvalorinsercion + str(strvalorins) + ', '
 
                     print("**** LIMPIANDO TEMPORAL ***")
                     consulta = ""
@@ -209,11 +233,21 @@ def main(argv):
                     if str(tipo) == "69B":
                         consulta = ""
                         cursor = conexion.cursor()
+                        consulta = "DELETE FROM \"BaseSistemaHistorico\".\"INF69B\" "
+                        consulta = consulta + "WHERE \"FH_HIST\" = to_date(to_char(NOW(), 'YYYY-MM-DD'), 'YYYY-MM-DD') "
+                        # print(consulta)
+                        # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+                        # return
+                        cursor.execute(consulta)
+                        cursor.close()
+
+                        consulta = ""
+                        cursor = conexion.cursor()
                         strcamposinsercion = strcamposinsercion + "\"CVE_DESCARGA\", \"FH_HIST\", \"FH_PUB_69B\""
                         strvalorinsercion = strvalorinsercion + "'" + CVE_DESCARGA + "' AS \"CVE_DESCARGA\", "
                         strvalorinsercion = strvalorinsercion + "NOW() AS \"FH_HIST\", "
-                        strvalorinsercion = strvalorinsercion + "CASE WHEN \"SITUACION_CONTR\" = 'Presunto' THEN to_date(\"FH_PUB_PRESUN_SAT\", 'DD/MM/YYYY') WHEN \"SITUACION_CONTR\" = 'Desvirtuado' THEN to_date(\"FH_PUB_DESV_SAT\", 'DD/MM/YYYY') "
-                        strvalorinsercion = strvalorinsercion + "WHEN \"SITUACION_CONTR\" = 'Definitivo' THEN to_date(\"FH_PUB_SAT_DEF\", 'DD/MM/YYYY') WHEN \"SITUACION_CONTR\" = 'Sentencia Favorable' THEN to_date(\"FH_OFIC_GLO_SENT_FAV_SAT\", 'DD/MM/YYYY') END AS \"FH_PUB_69B\" "
+                        strvalorinsercion = strvalorinsercion + "CASE WHEN \"SITUACION_CONTR\" = 'Presunto' AND \"BaseSistema\".is_date(\"FH_PUB_PRESUN_SAT\") THEN to_date(\"FH_PUB_PRESUN_SAT\", 'DD/MM/YY') WHEN \"SITUACION_CONTR\" = 'Desvirtuado' AND \"BaseSistema\".is_date(\"FH_PUB_DESV_SAT\") THEN to_date(\"FH_PUB_DESV_SAT\", 'DD/MM/YY') "
+                        strvalorinsercion = strvalorinsercion + "WHEN \"SITUACION_CONTR\" = 'Definitivo' AND \"BaseSistema\".is_date(\"FH_PUB_SAT_DEF\") THEN to_date(\"FH_PUB_SAT_DEF\", 'DD/MM/YY') WHEN \"SITUACION_CONTR\" = 'Sentencia Favorable' AND \"BaseSistema\".is_date(\"FH_OFIC_GLO_SENT_FAV_SAT\") THEN to_date(\"FH_OFIC_GLO_SENT_FAV_SAT\", 'DD/MM/YY') END AS \"FH_PUB_69B\" "
                         consulta = "INSERT INTO \"BaseSistemaHistorico\".\"INF69B\"( "
                         consulta = consulta + strcamposinsercion + " ) SELECT "
                         consulta = consulta + strvalorinsercion + " FROM \"BaseSistema\".\"" + str(strtablatemp) + "\" WHERE (\"NO\" ~ '^[0-9]') = TRUE AND \"RFC\" IS NOT NULL  AND TRIM(\"RFC\") <> 'XXXXXXXXXXXX' "

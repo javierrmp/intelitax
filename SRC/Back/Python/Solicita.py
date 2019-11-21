@@ -57,8 +57,8 @@ def run(cmd, echo=True, graceful=True):
 def main():
     bError = 1
 
-    opts, args = getopt.getopt(sys.argv[1:], "r:p:t:")
-    msgFormato = "Solicita.py -r <rfc> -p <periodo YYYYMM> -t <tipo>"
+    opts, args = getopt.getopt(sys.argv[1:], "r:p:t:u:")
+    msgFormato = "Solicita.py -r <rfc> -p <periodo YYYYMM> -t <tipo> -u <emisor, receptor>"
 
     if len(opts) == 0:
         print("INGRESE LOS PARAMETROS")
@@ -66,10 +66,10 @@ def main():
         sys.exit()
     
     try:
-        
         strrfc = str(sys.argv[2])
         period = str(sys.argv[4])
         strtipo = str(sys.argv[6])
+        sfunc = str(sys.argv[8])
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print("ERROR EN LOS DATOS INGRESADOS")
         print(msgFormato)
@@ -108,6 +108,15 @@ def main():
             raise ValueError('error')
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print('NO EXISTE EL TIPO DE SOLICITUD')
+        print(msgFormato)
+        sys.exit()
+        return
+
+    try:
+        if not sfunc.strip() in ("emisor", "receptor"):
+            raise ValueError('error')
+    except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
+        print('INDIQUE LA FUNCION')
         print(msgFormato)
         sys.exit()
         return
@@ -185,7 +194,7 @@ def main():
 
                     cursor = conexion.cursor()
                     consulta = "SELECT \"TOKEN\", \"ID_DESCARGAWS\" FROM \"BaseSistema\".\"LOGDESCARGAWSAUTH\" "
-                    consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '"  + str(strtipo) +  "' AND \"STATUS\" = 28 AND NOW() BETWEEN \"FH_INI\" AND \"FH_FIN\" "
+                    consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '"  + str(strtipo) +  "' AND \"STATUS\" = 28 AND NOW() BETWEEN \"FH_INI\" AND \"FH_FIN\" AND \"TOKEN\" IS NOT NULL "
                     consulta = consulta + "ORDER BY \"ID_DESCARGAWS\" DESC LIMIT 1 "
                     cursor.execute(consulta)
                     if not cursor.rowcount:
@@ -204,9 +213,17 @@ def main():
 
                         cursor = conexion.cursor()
                         consulta = ""
-                        consulta = "INSERT INTO \"BaseSistema\".\"LOGDESCARGAWSPROCESO\"(\"CVE_DESCARGA\", \"ID_RFC\", \"TIPO\", \"STATUS\")"
-                        consulta = consulta + " VALUES(%s,%s,%s,%s)"
-                        valores = (str(CVE_DESCARGA), str(idrfc), str(strtipo), 27)
+                        consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"PERIODO\" = '" + str(period) + "', \"EMISOR_RECEPTOR\" = '" + str(sfunc) + "' "
+                        consulta = consulta + " WHERE \"ID_DESCARGAWS\" = '" + str(strIdDescarga) + "'"
+                        cursor.execute(consulta)
+                        conexion.commit()
+                        cursor.close()
+
+                        cursor = conexion.cursor()
+                        consulta = ""
+                        consulta = "INSERT INTO \"BaseSistema\".\"LOGDESCARGAWSPROCESO\"(\"CVE_DESCARGA\", \"ID_RFC\", \"TIPO\", \"STATUS\", \"EMISOR_RECEPTOR\", \"PERIODO\", \"FH_INI\", \"FH_FIN\", \"ACCION\" )"
+                        consulta = consulta + " VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                        valores = (str(CVE_DESCARGA), str(idrfc), str(strtipo), 27, str(sfunc), str(period), str(fechaInicio), str(fechaFin), "SOLICITA")
                         cursor.execute(consulta, valores)
                         conexion.commit()
                         cursor.close()
@@ -226,40 +243,22 @@ def main():
                         p = run(args)
 
                         print("**** SOLICITANDO AUTORIZACIONES ***")
-                        comando = 'php Solicita.php -c "Cert.cer" -k "Llave.key.pem" -r "' + str(strrfc) + '" -i "' + str(fechaInicio) + '" -f "' + str(fechaFin) + '" -t "' + str(strtipo) + '" -a "' + str(TokenAutoriza2) + '"'
+                        comando = 'php Solicita.php -c "Cert.cer" -k "Llave.key.pem" -r "' + str(strrfc) + '" -i "' + str(fechaInicio) + '" -f "' + str(fechaFin) + '" -t "' + str(strtipo) + '" -a "' + str(TokenAutoriza2) + '" -u "' + str(sfunc) + '"'
                         args = shlex.split(comando)
                         p = run(args)
-
-                        intentaDnuevo = 0
                         NumSolicitud = str(p[1])
+                        # print(NumSolicitud)
+
                         if len(NumSolicitud) >= 37:
-                            intentaDnuevo = 1
+                            msgError = 'ERROR: ' + str(NumSolicitud)
+                            raise NameError(msgError)
                         if NumSolicitud == "0":
-                            intentaDnuevo = 1
+                            msgError = 'ERROR: ' + str(NumSolicitud)
+                            raise NameError(msgError)
                         if NumSolicitud == 0:
-                            intentaDnuevo = 1
-
-                        if intentaDnuevo == 1:
-                            print("**** SOLICITANDO AUTORIZACIONES - SEGUNDO INTENTO ***")
-                            fechaFin = datetime.strptime(fechaFin, '%Y-%m-%dT%H:%M:%S')
-                            fechaFin = fechaFin - timedelta(minutes=5)
-                            
-                            print(fechaFin)
-                            comando = 'php Solicita.php -c "Cert.cer" -k "Llave.key.pem" -r "' + str(strrfc) + '" -i "' + str(fechaInicio) + '" -f "' + str(fechaFin) + '" -t "' + str(strtipo) + '" -a "' + str(TokenAutoriza2) + '"'
-                            args = shlex.split(comando)
-                            p = run(args)
-
-                            NumSolicitud = str(p[1])
-                            if len(NumSolicitud) >= 37:
-                                msgError = 'ERROR: ' + str(NumSolicitud)
-                                raise NameError(msgError)
-                            if NumSolicitud == "0":
-                                msgError = 'ERROR: ' + str(NumSolicitud)
-                                raise NameError(msgError)
-                            if NumSolicitud == 0:
-                                msgError = 'ERROR: ' + str(NumSolicitud)
-                                raise NameError(msgError)
-
+                            msgError = 'ERROR: ' + str(NumSolicitud)
+                            raise NameError(msgError)
+                        
                         print("**** CALCULANDO DATOS ***")
                         hexlify = codecs.getencoder('hex')
                         Solicitud = str(hexlify(NumSolicitud.encode('utf-8'))[0])[0:5000]
@@ -267,8 +266,8 @@ def main():
                         print("**** ACTUALIZANDO EL SISTEMA ***")
                         cursor = conexion.cursor()
                         consulta = ""
-                        consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSPROCESO\" SET \"FH_INI\" = '" + str(fechaInicio) + "', \"FH_FIN\" = '" + str(fechaFin) + "', \"IDPROCESO\" = '" + str(Solicitud) + "', \"STATUS\" = 28 "
-                        consulta = consulta + "WHERE \"CVE_DESCARGA\" = '" + str(CVE_DESCARGA) + "' AND  \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '" + str(strtipo) + "'"
+                        consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSPROCESO\" SET \"IDPROCESO\" = '" + str(Solicitud) + "', \"STATUS\" = 28 "
+                        consulta = consulta + "WHERE \"CVE_DESCARGA\" = '" + str(CVE_DESCARGA) + "' AND  \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '" + str(strtipo) + "' AND \"PERIODO\" = '" + str(period) + "' "
                         cursor.execute(consulta)
                         conexion.commit()
                         cursor.close()
@@ -283,17 +282,7 @@ def main():
                             cursor = conexion.cursor()
                             consulta = ""
                             consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSPROCESO\" SET \"STATUS\" = 32, \"MSGERROR\" = '" + str(error) + "'"
-                            consulta = consulta + " WHERE \"CVE_DESCARGA\" = '" + str(CVE_DESCARGA) + "' AND  \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '" + str(strtipo) + "'"
-                            
-                            cursor.execute(consulta)
-                            conexion.commit()
-                            cursor.close()
-
-                            cursor = conexion.cursor()
-                            consulta = ""
-                            consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"STATUS\" = 32, \"MSGERROR\" = '" + str(error) + "'"
-                            consulta = consulta + " WHERE \"ID_DESCARGAWS\" = '" + str(strIdDescarga) + "'"
-                            
+                            consulta = consulta + " WHERE \"CVE_DESCARGA\" = '" + str(CVE_DESCARGA) + "' AND  \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '" + str(strtipo) + "' AND \"PERIODO\" = '" + str(period) + "' "
                             cursor.execute(consulta)
                             conexion.commit()
                             cursor.close()

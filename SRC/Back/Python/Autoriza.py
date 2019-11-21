@@ -169,14 +169,13 @@ def main():
                     comando = 'openssl pkcs8 -inform DER -in Llave.key -out Llave.key.pem -passin pass:' + str(paswd2)
                     args = shlex.split(comando)
                     p = run(args)
-                    sleep(2)
 
                     print("**** SOLICITANDO AUTORIZACIONES ***")
                     comando = 'php Autoriza.php -c Cert.cer -k Llave.key.pem'
                     args = shlex.split(comando)
                     p = run(args)
                     valor = p[1]
-                    sleep(2)
+                    # print(valor)
 
                     print("**** ACTUALIZANDO EL SISTEMA ***")
                     hexlify = codecs.getencoder('hex')
@@ -196,7 +195,7 @@ def main():
 
                     cursor = conexion.cursor()
                     consulta = ""
-                    consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"STATUS\" = 32, \"MSGERROR\" = " + str(OSError)
+                    consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"STATUS\" = 32, \"MSGERROR\" = " + str(error)
                     consulta = consulta + " WHERE \"CVE_DESCARGA\" = '" + str(CVE_DESCARGA) + "' AND  \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '" + str(strtipo) + "'"
                     cursor.execute(consulta)
                     conexion.commit()

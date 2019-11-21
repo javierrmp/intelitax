@@ -58,8 +58,8 @@ def run(cmd, echo=True, graceful=True):
 def main():
     bError = 1
 
-    opts, args = getopt.getopt(sys.argv[1:], "r:p:t:")
-    msgFormato = "Descarga.py -r <rfc> -p <periodo> -t <tipo>"
+    opts, args = getopt.getopt(sys.argv[1:], "r:p:t:u:")
+    msgFormato = "Descarga.py -r <rfc> -p <periodo> -t <tipo> -u <emisor, receptor>"
 
     if len(opts) == 0:
         print("INGRESE LOS PARAMETROS")
@@ -67,10 +67,10 @@ def main():
         sys.exit()
     
     try:
-        
         strrfc = str(sys.argv[2])
         period = str(sys.argv[4])
         strtipo = str(sys.argv[6])
+        sfunc = str(sys.argv[8])
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print("ERROR EN LOS DATOS INGRESADOS")
         print(msgFormato)
@@ -100,6 +100,15 @@ def main():
             raise ValueError('error')
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print('NO EXISTE EL TIPO DE SOLICITUD')
+        print(msgFormato)
+        sys.exit()
+        return
+    
+    try:
+        if not sfunc.strip() in ("emisor", "receptor"):
+            raise ValueError('error')
+    except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
+        print('INDIQUE LA FUNCION')
         print(msgFormato)
         sys.exit()
         return
@@ -155,7 +164,7 @@ def main():
 
                     cursor = conexion.cursor()
                     consulta = "SELECT \"TOKEN\", \"ID_DESCARGAWS\" FROM \"BaseSistema\".\"LOGDESCARGAWSAUTH\" "
-                    consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '"  + str(strtipo) +  "' AND \"STATUS\" = 28 "
+                    consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '"  + str(strtipo) +  "' AND \"STATUS\" = 28 AND \"PERIODO\" = '" + str(period) + "' "
                     consulta = consulta + "ORDER BY \"ID_DESCARGAWS\" DESC LIMIT 1 "
                     cursor.execute(consulta)
                     if not cursor.rowcount:
@@ -174,7 +183,7 @@ def main():
 
                         cursor = conexion.cursor()
                         consulta = "SELECT \"IDPROCESO\", \"ID_PROCESOWS\" FROM \"BaseSistema\".\"LOGDESCARGAWSPROCESO\" "
-                        consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '"  + str(strtipo) +  "' AND \"STATUS\" = 28"
+                        consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = '"  + str(strtipo) +  "' AND \"STATUS\" = 28 AND \"EMISOR_RECEPTOR\" = '"  + str(sfunc) +  "' AND \"PERIODO\" = '" + str(period) + "' "
                         consulta = consulta + "ORDER BY \"ID_PROCESOWS\" DESC LIMIT 1 "
                         cursor.execute(consulta)
                         if not cursor.rowcount:
@@ -193,9 +202,9 @@ def main():
 
                             cursor = conexion.cursor()
                             consulta = ""
-                            consulta = "INSERT INTO \"BaseSistema\".\"LOGDESCARGAWSPROCESO\"(\"CVE_DESCARGA\", \"ID_RFC\", \"TIPO\", \"STATUS\")"
-                            consulta = consulta + " VALUES(%s,%s,%s,%s)"
-                            valores = (str(CVE_DESCARGA), str(idrfc), str(strtipo), 27)
+                            consulta = "INSERT INTO \"BaseSistema\".\"LOGDESCARGAWSPROCESO\"(\"CVE_DESCARGA\", \"ID_RFC\", \"TIPO\", \"STATUS\", \"EMISOR_RECEPTOR\", \"PERIODO\", \"ACCION\" )"
+                            consulta = consulta + " VALUES(%s,%s,%s,%s,%s,%s,%s)"
+                            valores = (str(CVE_DESCARGA), str(idrfc), str(strtipo), 27, str(sfunc), str(period), "DESCARGA")
                             cursor.execute(consulta, valores)
                             conexion.commit()
                             cursor.close()
@@ -216,12 +225,11 @@ def main():
                             comando = 'openssl pkcs8 -inform DER -in Llave.key -out Llave.key.pem -passin pass:' + str(paswd2)
                             args = shlex.split(comando)
                             p = run(args)
-                            print(p)
 
-                            print("**** SOLICITANDO AUTORIZACIONES ***")
+                            print("**** SOLICITANDO DESCARGA ***")
                             comando = 'php Descarga.php -c "Cert.cer" -k "Llave.key.pem" -r "' + str(strrfc) + '" -a "' + str(TokenAutoriza2) + '" -v "' + str(Solicitud2) + '"'
                             args = shlex.split(comando)
-                            p = run(args)
+                            # p = run(args)
 
                             print("**** ACTUALIZANDO EL SISTEMA ***")
                             cursor = conexion.cursor()
@@ -234,7 +242,7 @@ def main():
 
                             cursor = conexion.cursor()
                             consulta = ""
-                            consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"STATUS\" = 31, \"MSGERROR\" = '" + str(Solicitud2) + "' "
+                            consulta = "UPDATE \"BaseSistema\".\"LOGDESCARGAWSAUTH\" SET \"STATUS\" = 31, \"MSGERROR\" = '" + str(Solicitud2) + "', \"EMISOR_RECEPTOR\" = '" + str(sfunc) + "' "
                             consulta = consulta + " WHERE \"ID_DESCARGAWS\" = '" + str(strIdDescarga) + "'"
                             cursor.execute(consulta)
                             conexion.commit()
@@ -263,8 +271,8 @@ def main():
 
                                         cursor = conexion.cursor()
                                         consulta = ""
-                                        consulta = "INSERT INTO \"BaseSistema\".\"LOGCARGAXML\" (\"CVE_DESCARGA\", \"ARCHIVOXML\", \"STATUS\", \"PAGINA\", \"PERIODO\", \"STATUSPERIODO\" ) "
-                                        consulta = consulta + "VALUES ('" + str(CVE_DESCARGA) + "', '" + str(strArchivotxt) + "', 34, '" + str(numPagina) + "', '" + str(period) + "', 38 )"
+                                        consulta = "INSERT INTO \"BaseSistema\".\"LOGCARGAXML\" (\"CVE_DESCARGA\", \"ARCHIVOXML\", \"STATUS\", \"PAGINA\", \"PERIODO\", \"STATUSPERIODO\", \"EMISOR_RECEPTOR\" ) "
+                                        consulta = consulta + "VALUES ('" + str(CVE_DESCARGA) + "', '" + str(strArchivotxt) + "', 34, '" + str(numPagina) + "', '" + str(period) + "', 38, '" + str(sfunc) + "' )"
                                         cursor.execute(consulta)
                                         conexion.commit()
                                         cursor.close()

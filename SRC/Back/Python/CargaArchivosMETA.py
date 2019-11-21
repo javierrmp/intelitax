@@ -52,8 +52,8 @@ def run(cmd, echo=True, graceful=True):
 def main():
     bError = 1
 
-    opts, args = getopt.getopt(sys.argv[1:], "r:")
-    msgFormato = "CargaArchivosMETA.py -r <rfc>"
+    opts, args = getopt.getopt(sys.argv[1:], "r:u:")
+    msgFormato = "CargaArchivosMETA.py -r <rfc> -u <emisor, receptor>"
 
     if len(opts) == 0:
         print("INGRESE LOS PARAMETROS")
@@ -62,6 +62,7 @@ def main():
     
     try:
         strrfc = str(sys.argv[2])
+        sfunc = str(sys.argv[4])
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print("ERROR EN LOS DATOS INGRESADOS")
         print(msgFormato)
@@ -73,6 +74,15 @@ def main():
             raise ValueError('error')
     except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
         print('INGRESE EL RFC')
+        print(msgFormato)
+        sys.exit()
+        return
+
+    try:
+        if not sfunc.strip() in ("emisor", "receptor"):
+            raise ValueError('error')
+    except (RuntimeError, TypeError, NameError, OSError, ValueError, Exception):
+        print('INDIQUE LA FUNCION')
         print(msgFormato)
         sys.exit()
         return
@@ -102,8 +112,8 @@ def main():
             print("**** VALIDANDO INFORMACION METADATA ***")
 
             cursor = conexion.cursor()
-            consulta = "SELECT \"ID_DESCARGAWS\", \"MSGERROR\" FROM \"BaseSistema\".\"LOGDESCARGAWSAUTH\" "
-            consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = 'Metadata' AND \"STATUS\" = 31 AND \"MSGERROR\" <> '' "
+            consulta = "SELECT \"ID_DESCARGAWS\", \"MSGERROR\", \"CVE_DESCARGA\" FROM \"BaseSistema\".\"LOGDESCARGAWSAUTH\" "
+            consulta = consulta + "WHERE \"ID_RFC\" = '" + str(idrfc) + "' AND  \"TIPO\" = 'Metadata' AND \"STATUS\" = 31 AND \"MSGERROR\" <> '' AND \"EMISOR_RECEPTOR\" = '" + str(sfunc) + "' "
             consulta = consulta + "ORDER BY \"ID_DESCARGAWS\" DESC LIMIT 1 "
             cursor.execute(consulta)
             if not cursor.rowcount:
@@ -114,8 +124,8 @@ def main():
                 cursor.close()
 
             for row2 in RESULTADOS2:
-                #idDescarga = str(row2[0])
                 strArchivo = str(row2[1])
+                CVE_DESCARGA = str(row2[2])
 
                 comando = 'unzip -o ' + str(strArchivo) + '.zip' 
                 args = shlex.split(comando)
@@ -128,9 +138,7 @@ def main():
 
                 print("**** BUSCANDO ARCHIVOS ***")
 
-                CVE_DESCARGA = strftime("%Y%m%d%H%M%S", localtime())
-                # print("CARGA:",CVE_DESCARGA)
-                # print(strArchivotxt)
+                # CVE_DESCARGA = strftime("%Y%m%d%H%M%S", localtime())
 
                 for file in Archivos:
                     Archivo = file
@@ -215,7 +223,7 @@ def main():
 
                                 print("**** LIMPIANDO TEMPORALES ***")
                                 os.remove(strArchivotxt)
-                                os.remove(str(strArchivo) + '.zip')
+                                # os.remove(str(strArchivo) + '.zip')
 
                                 print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
 
